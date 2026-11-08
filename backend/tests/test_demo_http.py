@@ -80,6 +80,68 @@ def test_tool_pages_render(path):
     assert "<form" in response.text or "generate" in response.text.lower()
 
 
+LEGAL_LINKS = ('href="/privacy"', 'href="/terms"')
+FORBIDDEN_POLICY_CLAIMS = (
+    "never store",
+    "never stored",
+    "not used for training",
+    "do not train",
+    "zero data retention",
+    "encrypted at rest",
+    "binding arbitration",
+    "Edmonds",
+    "GDPR",
+    "CCPA",
+    "$100",
+)
+
+
+def test_legal_pages_and_navigation():
+    home = client.get("/")
+    assert home.status_code == 200
+    for link in LEGAL_LINKS:
+        assert link in home.text
+    assert 'rel="canonical" href="https://keyprose.com/"' in home.text
+
+    for path in ("/tools/listing", "/tools/cma", "/tools/social", "/tools/email", "/tools/outreach"):
+        page = client.get(path)
+        assert page.status_code == 200
+        for link in LEGAL_LINKS:
+            assert link in page.text
+
+    privacy = client.get("/privacy")
+    terms = client.get("/terms")
+    assert privacy.status_code == 200
+    assert terms.status_code == 200
+    assert "Privacy Policy" in privacy.text
+    assert "Terms of Use" in terms.text
+    assert "November 7, 2026" in privacy.text
+    assert "November 7, 2026" in terms.text
+    assert "Kevin Love" in privacy.text
+    assert "routellm.abacus.ai" in privacy.text
+    assert "email-address field is not added" in privacy.text
+    assert "OPENAI_API_KEY" not in privacy.text
+    assert "Abacus RouteLLM key" not in privacy.text
+    assert "lawyer" not in privacy.text.lower()
+    css = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "assets", "legal.css"), encoding="utf-8").read()
+    assert 'nav[aria-label="Primary"]' in css
+    assert "\nnav {" not in css
+    assert "lawyer" not in terms.text.lower()
+    assert 'rel="canonical" href="https://keyprose.com/privacy"' in privacy.text
+    assert 'rel="canonical" href="https://keyprose.com/terms"' in terms.text
+    combined = (privacy.text + terms.text).lower()
+    for claim in FORBIDDEN_POLICY_CLAIMS:
+        assert claim.lower() not in combined
+
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "https://keyprose.com/privacy" in sitemap.text
+    assert "https://keyprose.com/terms" in sitemap.text
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200
+    assert "https://keyprose.com/sitemap.xml" in robots.text
+
+
 def test_unknown_page_uses_branded_404():
     response = client.get("/missing-page")
     assert response.status_code == 404

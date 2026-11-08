@@ -4,7 +4,7 @@
 
 The Git repository is still named `listing-pilot`. API routes and environment variables are unchanged.
 
-Planned domains, not registered and not configured in this app: `keyprose.com` and `keyprose.app`. There is no canonical URL setting. After one is purchased, point it at the host and set CORS `allow_origins` in `backend/server.py`. Do not hardcode the domain.
+The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` serve the same site. Privacy Policy: [https://keyprose.com/privacy](https://keyprose.com/privacy). Terms of Use: [https://keyprose.com/terms](https://keyprose.com/terms). Those pages, the homepage, the tools, and the API docs set a canonical URL on `keyprose.com`. CORS in `backend/server.py` is still open (`allow_origins=["*"]`) for the self-hosted demo.
 
 [![CI](https://github.com/YOUR_USERNAME/listing-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/listing-pilot/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
