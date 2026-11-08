@@ -62,7 +62,10 @@ def test_homepage_links_every_tool():
     html = response.text
     for path in ("/tools/listing", "/tools/cma", "/tools/social", "/tools/email", "/tools/outreach"):
         assert path in html
-    assert "https://github.com/K-Love/listing-pilot" in html
+    footer = html[html.lower().rfind("<footer"):]
+    assert "github.com" not in footer.lower()
+    assert 'href="/privacy"' in footer
+    assert 'href="/terms"' in footer
     assert "KeyProse" in html
     assert "the AI back office for listing agents" in html
     assert "Real Estate AI" not in html
@@ -108,6 +111,10 @@ def test_legal_pages_and_navigation():
         assert page.status_code == 200
         for link in LEGAL_LINKS:
             assert link in page.text
+        tool_footer = page.text[page.text.lower().rfind("<footer"):]
+        assert "github.com" not in tool_footer.lower()
+        assert 'href="/privacy"' in tool_footer
+        assert 'href="/terms"' in tool_footer
 
     privacy = client.get("/privacy")
     terms = client.get("/terms")
@@ -120,6 +127,16 @@ def test_legal_pages_and_navigation():
     assert "Kevin Love" in privacy.text
     assert "routellm.abacus.ai" in privacy.text
     assert "email-address field is not added" in privacy.text
+    assert "https://github.com/K-Love/listing-pilot" in privacy.text.split("<footer", 1)[0]
+    for page in (home, privacy, terms):
+        footer = page.text[page.text.lower().rfind("<footer"):]
+        assert "github.com" not in footer.lower()
+        assert 'href="/privacy"' in footer
+        assert 'href="/terms"' in footer
+    docs = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "api-docs.html"), encoding="utf-8").read()
+    docs_body, docs_footer = docs.lower().rsplit("<footer", 1)
+    assert "github.com/k-love/listing-pilot/blob/main/docs/api_reference.md" in docs_body
+    assert "github.com" not in docs_footer
     assert "OPENAI_API_KEY" not in privacy.text
     assert "Abacus RouteLLM key" not in privacy.text
     assert "lawyer" not in privacy.text.lower()
