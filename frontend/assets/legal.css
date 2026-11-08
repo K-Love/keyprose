@@ -38,7 +38,7 @@ body {
 
 .skip:focus { transform: none; }
 
-nav {
+nav[aria-label="Primary"] {
   background: var(--primary);
   color: #fff;
   padding: 0.65rem 1.25rem;
@@ -114,7 +114,6 @@ a:focus-visible {
 
 .layout { padding: 1.5rem 1.25rem 3rem; }
 
-.notice,
 .toc,
 section {
   background: var(--card);
@@ -124,12 +123,13 @@ section {
   margin: 0 0 1rem;
 }
 
-.notice {
-  background: #fffbeb;
-  border-color: #fcd34d;
+.draft-note {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
-.notice p:last-child,
 section p:last-child,
 .toc p:last-child { margin-bottom: 0; }
 
@@ -152,11 +152,33 @@ li { margin: 0.28rem 0; }
 
 a { color: var(--link); }
 
+.toc {
+  display: block;
+  position: static;
+  top: auto;
+  color: var(--text);
+  text-align: left;
+}
+
+.toc h2,
+.toc ul,
+.toc li {
+  text-align: left;
+}
+
 .toc a { text-decoration: underline; text-underline-offset: 0.15em; }
 
-.toc ul { list-style: none; padding-left: 0; margin-bottom: 0; }
+.toc ul {
+  display: block;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 
-.toc li { margin: 0.2rem 0; }
+.toc li {
+  display: block;
+  margin: 0.2rem 0;
+}
 
 footer {
   background: var(--primary-dark);
@@ -175,13 +197,13 @@ footer a {
 @media (max-width: 640px) {
   .page-header { padding: 2rem 1rem 1.5rem; }
   .layout { padding: 1rem 1rem 2.5rem; }
-  .notice, .toc, section { padding: 1rem; }
+  .toc, section { padding: 1rem; }
 }
 
 @media print {
-  nav, .skip, .toc, footer { display: none; }
+  nav[aria-label="Primary"], .skip, .toc, footer { display: none; }
   body { background: #fff; }
   .page-header { background: #fff; color: #000; padding: 0 0 1rem; }
-  .page-header p { color: #000; }
-  .notice, section { border: none; padding: 0; }
+  .page-header p, .draft-note { color: #000; }
+  section { border: none; padding: 0; }
 }

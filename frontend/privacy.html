@@ -38,9 +38,8 @@
   </header>
 
   <main id="content" class="layout">
-    <div class="notice">
-      <p>A lawyer has not reviewed this page. It describes the public KeyProse website as it worked on the effective date. The rules for using the site are in the <a href="/terms">Terms of Use</a>.</p>
-    </div>
+    <p class="draft-note">A lawyer has not reviewed this page.</p>
+    <p>It describes the public KeyProse website as it worked on the effective date. The rules for using the site are in the <a href="/terms">Terms of Use</a>.</p>
 
     <nav class="toc" aria-label="On this page">
       <h2>On this page</h2>
@@ -51,7 +50,7 @@
         <li><a href="#submit">What you can submit</a></li>
         <li><a href="#server">What the server does with it</a></li>
         <li><a href="#provider">The AI provider</a></li>
-        <li><a href="#saved">What this code saves</a></li>
+        <li><a href="#saved">What is saved</a></li>
         <li><a href="#browser">Your browser</a></li>
         <li><a href="#hosting">Hosting and logs</a></li>
         <li><a href="#cookies">Cookies, analytics, and forms</a></li>
@@ -83,72 +82,67 @@
 
     <section id="submit">
       <h2>What you can submit</h2>
-      <p>The site has five tools. Each one sends what you type to this site’s <code>/api</code> as JSON. There is no account. Each tool has a Load Sample button that fills the fields with example text. Those examples are not a real client’s listing.</p>
+      <p>The site has five tools. What you type is sent to this site so it can draft a reply. There is no account. Each tool can fill the fields with example text. Those examples are not a real client’s listing.</p>
 
       <h3>Listing Writer</h3>
-      <p>The page sends an address, bedrooms, bathrooms, square footage, year built, list price, neighborhood, key features, tone, and length. Sample listing text can use the neighborhood. The live model prompt in this code uses the address, bedrooms, bathrooms, square footage, year built, features, and price. It does not copy the neighborhood into that prompt. The price is in the prompt, with an instruction not to repeat the price in the description.</p>
+      <p>You can enter an address, bedrooms, bathrooms, size, year built, list price, neighborhood, features, tone, and length. The site receives all of that. Sample copy can mention the neighborhood. A live description is written from the address, size, year, features, and price. The neighborhood field is not added to that live request. The price is included.</p>
 
       <h3>CMA Assistant</h3>
-      <p>The page sends a subject address, bedrooms, bathrooms, square footage, and comparable sales. Each comparable sale can include an address, sale price, square feet, bedrooms, bathrooms, and a sold date. The estimated value, the range, and the price per square foot are calculated from the prices and sizes you enter. The written summary is sample text, or, when a live call succeeds, text returned by the model. On the public site the PDF is built from that result and placed inside the JSON response. The PDF says it is not an appraisal.</p>
+      <p>You can enter a subject address, bedrooms, bathrooms, size, and comparable sales. A comparable sale can include an address, sale price, size, bedrooms, bathrooms, and a sold date. The value, the range, and the price per square foot are calculated from the prices and sizes you enter. The written summary is sample text, or text from the model when a live draft succeeds. The PDF comes back with that reply and says it is not an appraisal. The public site does not keep the file.</p>
 
       <h3>Social Generator</h3>
-      <p>The page sends a property id, tone, platform, and property details: address, bedrooms, bathrooms, square footage, price, and a highlight. The platform choices are Instagram, Facebook, Twitter/X, LinkedIn, or all of them. The tool drafts posts. It does not publish them.</p>
+      <p>You can enter a property id, an address, bedrooms, bathrooms, size, price, a highlight, a tone, and a platform. The platforms are Instagram, Facebook, Twitter/X, LinkedIn, or all of them. The tool drafts posts. It does not publish them.</p>
 
       <h3>Email Campaigns</h3>
-      <p>The page sends a recipient type, a first name, an agent name, a property address, a price, a highlight, and how many emails to draft. The page script also sends a fixed example of 4 bedrooms, 3 bathrooms, and 2,400 square feet in every email request, even if you did not type those numbers. The tool drafts the emails. It does not send them.</p>
+      <p>You can enter a recipient type, a first name, an agent name, a property address, a price, a highlight, and how many emails to draft. The tool drafts the emails. It does not send them.</p>
 
       <h3>Outreach Engine</h3>
-      <p>The page sends one contact per line, as a name, an email address, and a type, plus a sequence choice and an optional custom note. The result is a preview. The site does not email those contacts.</p>
-      <p>The built-in sequences (new listing, price drop, open house, and follow-up) are filled from templates on the server. They are not sent to the model. A custom sequence can be sent to the model. That prompt includes names and types for up to five contacts, and the custom note. It does not include the email addresses. The email addresses are still in the request your browser sends to this site’s function.</p>
+      <p>You can enter a name, an email address, and a type for each contact, choose a sequence, and add an optional note. The site receives those so it can show a preview. It does not email the contacts.</p>
+      <p>The built-in sequences (new listing, price drop, open house, and follow-up) are written on this site. They are not sent to the model. A custom sequence can be sent to the model. That message uses names, contact types, and the note. The email-address field is not added to it. An address you type into a name or the note can still be included.</p>
     </section>
 
     <section id="server">
       <h2>What the server does with it</h2>
-      <p>The public site is static pages plus a Netlify function at <code>/api/*</code>. The function builds a reply and returns JSON to your browser. The draft stays on that page until you leave or reload. This code does not write the listing, the comps, the contact list, or the generated draft into a database, and it does not save a history of past generations.</p>
-      <p>There are two ways a reply is made:</p>
+      <p>The site uses what you submit to build a reply and show it in your browser. The draft stays on that page until you leave or reload. It is not saved as a history of past generations, and it is not written into a database of listings.</p>
+      <p>There are two kinds of reply:</p>
       <ul>
-        <li>Sample copy, when no model key is configured, or when a live call is limited, too long, or fails. The page says so when the response includes a notice.</li>
-        <li>A live generation. The function builds a prompt from the fields above and sends it to a chat completions endpoint.</li>
+        <li>Sample copy, when a live draft is not available, is limited, is too long, or fails. The page says so when it can.</li>
+        <li>A live draft. The text needed to write it is sent to the provider below.</li>
       </ul>
     </section>
 
     <section id="provider">
       <h2>The AI provider</h2>
-      <p>The code reads the key from an environment variable named <code>OPENAI_API_KEY</code>. That name does not mean the provider is OpenAI. The host comes from <code>AI_BASE_URL</code>. If that variable is empty, the code uses <code>https://api.openai.com/v1</code> and calls <code>/chat/completions</code> on it.</p>
-      <p>On November 7, 2026, <a href="https://keyprose.com/api/health">https://keyprose.com/api/health</a> returned <code>ai_mode</code> “live”, <code>host</code> “netlify”, and <code>provider_host</code> “routellm.abacus.ai”. The health check does not return the key. The key configured for that Netlify function is an Abacus RouteLLM key. That fact is from the site configuration. The repository does not contain the key or the saved host. The health check is how the running site shows the host.</p>
-      <p>The health check does not return a model id. The code uses <code>AI_MODEL</code> if it is set, otherwise <code>OPENAI_MODEL</code>, otherwise <code>gpt-4o-mini</code>. This page does not name the model id on the public site. That setting is not in the repository and is not in the health response.</p>
-      <p>A live call sends the prompt, a system line on the listing tool, a token cap, and a temperature of 0.7. The code does not send a setting for how long the provider keeps the prompt, and it does not send a setting about model training. I am not stating a retention period or a training rule for the provider.</p>
-      <p>Abacus publishes its own privacy policy at <a href="https://abacus.ai/privacy-policy" target="_blank" rel="noopener">abacus.ai/privacy-policy (opens in a new tab)</a>. That page is theirs. I am not copying it into this policy as a promise about KeyProse. If the host setting changed, the health check would show a different <code>provider_host</code>, and live prompts would go there instead.</p>
-      <p>When a model call fails, the function writes a short notice that the call failed and then returns sample copy. That notice is not your listing text, and the code does not write the key into it.</p>
+      <p>On November 7, 2026, live drafts on the public site were sent to Abacus RouteLLM at routellm.abacus.ai. The public status check shows that host. It does not show which model answered, so this page does not name a model. If the host is changed later, live drafts go to the new host instead.</p>
+      <p>This site does not tell the provider how long to keep a draft request, and it does not tell the provider whether that request may be used for training. I am not stating those rules here. Abacus publishes its own privacy policy at <a href="https://abacus.ai/privacy-policy" target="_blank" rel="noopener">abacus.ai/privacy-policy (opens in a new tab)</a>. That page is theirs. I am not copying it into this policy as a promise about KeyProse.</p>
+      <p>If a live draft cannot be completed, you get sample copy instead.</p>
     </section>
 
     <section id="saved">
-      <h2>What this code saves</h2>
-      <p>The function saves rate-limit counts when a live generation is attempted. It reads an IP address from the Netlify header <code>x-nf-client-connection-ip</code>, or else the first value in <code>x-forwarded-for</code>. It stores a SHA-256 hash of that address, cut to 32 characters, together with the hour, and a count. It also stores one count for the UTC day for the whole site. The store is a Netlify Blobs store named <code>keyprose-ai-limits</code>. The saved value is the count, not your listing.</p>
-      <p>The defaults in the code are 10 live generations per address each hour and 200 live generations per UTC day for the whole site. Either number can be changed, or turned off, in the host environment. This page does not show the values saved in the Netlify account. It shows the defaults in the code.</p>
-      <p>The code does not delete old counter keys, and it does not set how long they are kept. If the blob store cannot be opened, the counts stay in memory for that running copy. The function logs that the blob store is unavailable. It does not log your listing in that line.</p>
-      <p>The public CMA PDF is not saved as a file. It is returned inside the JSON response, and your browser downloads it from that response. The Python server in the repository is not what keyprose.com runs. That server can write a CMA PDF into a temporary directory on the machine that runs it. If you run a copy yourself, you operate that copy.</p>
+      <h2>What is saved</h2>
+      <p>The listing, the comparable sales, the contact list, and the draft are used to make the reply. They are not stored as a saved history on this site.</p>
+      <p>When a live draft is attempted, the site keeps a count so it can limit how often live drafts run. It keeps a count for your network each hour, and one count per day for the whole site. The count is not your listing text. The usual limits are 10 live drafts an hour for a network and 200 a day for the site. The host can change those numbers. This page does not set how long the counts are kept.</p>
+      <p>The CMA file is part of the reply your browser receives. The public site does not save that file for you to fetch later.</p>
     </section>
 
     <section id="browser">
       <h2>Your browser</h2>
-      <p>This site’s page code does not set a cookie. It does not use <code>localStorage</code> or <code>sessionStorage</code>. It does not save a history of drafts. When you reload or leave, the draft on the screen is gone unless you copied it. Your browser’s own history can still list the page address. This site’s code does not put the draft there.</p>
+      <p>These pages do not set a cookie, and they do not save a draft in your browser. When you reload or leave, the draft on the screen is gone unless you copied it. Your browser’s own history can still list the page address. This site does not put the draft there.</p>
       <p>A copy button uses your browser’s clipboard. This site does not receive another copy from that step.</p>
       <p>The pages use the fonts already on your device. They do not request a font file from Google.</p>
     </section>
 
     <section id="hosting">
       <h2>Hosting and logs</h2>
-      <p>Netlify hosts the public site. The repository names Netlify as the host for these pages and for the <code>/api</code> function. When your browser requests a page or calls the API, the host receives the ordinary connection data needed to deliver it, such as an IP address, the page address, the time, and the browser’s user-agent string. This repository does not set how long the host keeps those logs. Netlify’s privacy policy is the host’s own description: <a href="https://www.netlify.com/privacy/" target="_blank" rel="noopener">netlify.com/privacy (opens in a new tab)</a>.</p>
-      <p>The public address uses HTTPS. This page does not promise encryption at rest. The repository does not describe encryption at rest.</p>
-      <p>API responses from the function send <code>cache-control: no-store</code>. That header asks caches not to store the JSON reply. It is not a statement about host logs or about the AI provider.</p>
+      <p>Netlify hosts the public site. When your browser requests a page or asks for a draft, the host receives the ordinary connection data needed to deliver it, such as an IP address, the page address, the time, and the browser’s user-agent string. This site does not set how long the host keeps those logs. Netlify’s privacy policy is the host’s own description: <a href="https://www.netlify.com/privacy/" target="_blank" rel="noopener">netlify.com/privacy (opens in a new tab)</a>.</p>
+      <p>The public address uses HTTPS. This page does not promise encryption at rest.</p>
     </section>
 
     <section id="cookies">
       <h2>Cookies, analytics, and forms</h2>
-      <p>The pages do not include an analytics script, an advertising pixel, or a cookie banner. Their own code does not set a cookie. I am not describing optional products that can be switched on in a hosting account. Those switches are not in the website files.</p>
-      <p>The tool fields are not a Netlify Form. Nothing in this code puts them in a form inbox. A tool request is the JSON call described above, used to build the reply.</p>
-      <p>This code does not sell what you submit, and it does not send it to an advertising network. A live generation does send the prompt to the chat completions host, so that host receives it.</p>
+      <p>The pages do not include an analytics script, an advertising pixel, or a cookie banner. They do not set a cookie. I am not describing optional products that can be switched on in the hosting account. Those switches are not part of these pages.</p>
+      <p>The tool fields are not stored as a contact-form submission. They are used to build the reply described above.</p>
+      <p>This site does not sell what you submit, and it does not send it to an advertising network. A live draft does send the text needed to write it to the provider named above, so that provider receives it.</p>
     </section>
 
     <section id="accounts">
@@ -171,15 +165,15 @@
 
     <section id="retention">
       <h2>How long information stays</h2>
-      <p>A draft on the screen lasts until you reload or leave. This code does not keep a history of it.</p>
-      <p>Rate-limit counts stay until they are removed. This code does not set a deletion date for them.</p>
-      <p>This repository does not state how long Netlify keeps logs, or how long the AI provider keeps a prompt. I am not stating a number of days for either one.</p>
+      <p>A draft on the screen lasts until you reload or leave. This site does not keep a history of it.</p>
+      <p>The live-use counts stay until they are removed. This site does not set a deletion date for them.</p>
+      <p>This site does not state how long Netlify keeps logs, or how long the AI provider keeps a request. I am not stating a number of days for either one.</p>
     </section>
 
     <section id="requests">
       <h2>Asking for a copy or deletion</h2>
       <p>Use the contact form on the studio homepage. Say that you want a copy or a deletion, and that the request is about KeyProse. Include the approximate time and which tool you used.</p>
-      <p>The listing text is not in the rate-limit store. A request about a draft will usually have no saved draft for me to delete from KeyProse. I will say so when that is the case. I cannot describe from this site’s files what copy Netlify or Abacus keeps.</p>
+      <p>The listing text is not stored with the live-use counts. A request about a draft will usually have no saved draft for me to delete from KeyProse. I will say so when that is the case. I cannot describe from this site what copy Netlify or Abacus keeps.</p>
     </section>
 
     <section id="children">
