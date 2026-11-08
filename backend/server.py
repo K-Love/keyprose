@@ -62,6 +62,28 @@ if os.path.isdir(FRONTEND_DIR):
             return FileResponse(path)
         raise HTTPException(status_code=404, detail="Tool not found")
 
+    @app.get("/privacy", include_in_schema=False)
+    async def serve_privacy():
+        return FileResponse(os.path.join(FRONTEND_DIR, "privacy.html"))
+
+    @app.get("/terms", include_in_schema=False)
+    async def serve_terms():
+        return FileResponse(os.path.join(FRONTEND_DIR, "terms.html"))
+
+    @app.get("/sitemap.xml", include_in_schema=False)
+    async def serve_sitemap():
+        return FileResponse(
+            os.path.join(FRONTEND_DIR, "sitemap.xml"),
+            media_type="application/xml",
+        )
+
+    @app.get("/robots.txt", include_in_schema=False)
+    async def serve_robots():
+        return FileResponse(
+            os.path.join(FRONTEND_DIR, "robots.txt"),
+            media_type="text/plain",
+        )
+
 
 def _finish(result):
     if result.media_type == "application/pdf":
