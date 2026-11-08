@@ -122,11 +122,11 @@ def test_legal_pages_and_navigation():
     assert "email-address field is not added" in privacy.text
     assert "OPENAI_API_KEY" not in privacy.text
     assert "Abacus RouteLLM key" not in privacy.text
-    assert "A lawyer has not reviewed" in privacy.text
+    assert "lawyer" not in privacy.text.lower()
     css = open(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "assets", "legal.css"), encoding="utf-8").read()
     assert 'nav[aria-label="Primary"]' in css
     assert "\nnav {" not in css
-    assert "A lawyer has not reviewed" in terms.text
+    assert "lawyer" not in terms.text.lower()
     assert 'rel="canonical" href="https://keyprose.com/privacy"' in privacy.text
     assert 'rel="canonical" href="https://keyprose.com/terms"' in terms.text
     combined = (privacy.text + terms.text).lower()
