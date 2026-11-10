@@ -52,6 +52,10 @@ function hashIndex(value, size) {
   return Number.parseInt(hex, 16) % size;
 }
 
+function cleanText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function listingText(details, tone, length) {
   const openers = {
     luxury: [
@@ -85,17 +89,21 @@ function listingText(details, tone, length) {
   const beds = details.beds ?? 3;
   const baths = details.baths ?? 2;
   const sqft = Number(details.sqft ?? 1800);
-  const address = details.address || "this stunning property";
-  const features = Array.isArray(details.features) ? details.features.filter(Boolean) : [];
+  const address = cleanText(details.address);
+  const features = Array.isArray(details.features)
+    ? details.features.map((feature) => (typeof feature === "string" ? feature.trim() : feature)).filter(Boolean)
+    : [];
   const year = details.year_built ? `Built in ${details.year_built}, this ` : "This ";
-  const neighborhood = details.neighborhood ? ` in the desirable ${details.neighborhood} area` : "";
+  const place = address ? ` at ${address}` : "";
+  const neighborhoodName = cleanText(details.neighborhood);
+  const neighborhood = neighborhoodName ? ` in the desirable ${neighborhoodName} area` : "";
   const price = Number(details.price) ? ` Listed at $${money(details.price)}.` : "";
   let featureStr = "";
   if (features.length === 1) featureStr = features[0];
   else if (features.length === 2) featureStr = `${features[0]} and ${features[1]}`;
   else if (features.length > 2) featureStr = `${features.slice(0, -1).join(", ")}, and ${features.at(-1)}`;
 
-  const short = `${opener} ${year}${beds}-bedroom, ${baths}-bathroom home${neighborhood} offers ${money(sqft)} sq ft of thoughtfully designed living space.${price}`;
+  const short = `${opener} ${year}${beds}-bedroom, ${baths}-bathroom home${place}${neighborhood} offers ${money(sqft)} sq ft of thoughtfully designed living space.${price}`;
   if (length === "short") return short;
   const extra = featureStr
     ? ` Highlights include ${featureStr}. The open-concept layout flows seamlessly from the gourmet kitchen to the inviting living area, perfect for both everyday living and entertaining. The primary suite is a true retreat, complete with a spa-inspired bath and generous closet space.`

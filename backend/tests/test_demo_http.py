@@ -226,3 +226,28 @@ def test_normalize_path_accepts_function_splat():
 def test_handler_rejects_bad_listing_payload():
     result = handle_api("POST", "/api/listing-writer", {})
     assert result.status == 422
+
+
+def test_listing_page_validates_and_explains_itself():
+    page = client.get("/tools/listing")
+    assert page.status_code == 200
+    html = page.text
+    assert 'id="listing-form"' in html
+    assert 'for="address"' in html
+    assert 'for="beds"' in html
+    assert 'for="price"' in html
+    assert 'id="address-error"' in html
+    assert "Enter the street address, city, and state." in html
+    assert "Generating listing" in html
+    assert "Regenerate listing" in html
+    assert "123 Main St" not in html
+    assert "aria-live" in html
+    assert "aria-invalid" in html
+    assert "clipboard.writeText" in html
+    assert "catch (err)" in html
+    assert "max-width:640px" in html
+    assert 'aria-current="page"' in html
+    footer = html[html.lower().rfind("<footer"):]
+    assert 'href="/privacy"' in footer
+    assert 'href="/terms"' in footer
+    assert "github.com" not in footer.lower()

@@ -339,6 +339,40 @@ test("an oversized body is rejected before a model call", async () => {
   });
 });
 
+test("demo listing names the address and skips a blank neighborhood", async () => {
+  const blank = await (await call("/api/listing-writer", {
+    property_details: {
+      address: " 123 Maple Street ",
+      beds: 4,
+      baths: 3,
+      sqft: 2400,
+      price: 650000,
+      neighborhood: "   ",
+      features: [" pool ", ""],
+    },
+    tone: "luxury",
+    length: "medium",
+  })).json();
+  assert.match(blank.listing_text, /at 123 Maple Street/);
+  assert.match(blank.listing_text, /Highlights include pool/);
+  assert.doesNotMatch(blank.listing_text, /desirable/);
+
+  const named = await (await call("/api/listing-writer", {
+    property_details: {
+      address: "123 Maple Street",
+      beds: 4,
+      baths: 3,
+      sqft: 2400,
+      price: 650000,
+      neighborhood: " South Congress ",
+    },
+    tone: "luxury",
+    length: "short",
+  })).json();
+  assert.match(named.listing_text, /in the desirable South Congress area/);
+  assert.doesNotMatch(named.listing_text, /desirable {2,}/);
+});
+
 test("listing prompt includes neighborhood only when provided", async () => {
   const details = {
     address: "123 Maple Street",

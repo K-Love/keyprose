@@ -66,14 +66,14 @@ def _deterministic_listing(details: Dict[str, Any], tone: str, length: str) -> s
     h = int(hashlib.md5(str(details).encode()).hexdigest(), 16)
     opener = openers[h % len(openers)]
 
-    beds = details.get("beds", 3)
-    baths = details.get("baths", 2)
-    sqft = details.get("sqft", 1800)
-    address = details.get("address", "this stunning property")
-    year_built = details.get("year_built", "")
-    price = details.get("price", "")
-    neighborhood = details.get("neighborhood", "")
-    features = details.get("features", [])
+    beds = _or_default(details.get("beds"), 3)
+    baths = _or_default(details.get("baths"), 2)
+    sqft = _or_default(details.get("sqft"), 1800)
+    address = _clean_text(details.get("address"))
+    year_built = details.get("year_built") or ""
+    price = details.get("price") or ""
+    neighborhood = _clean_text(details.get("neighborhood"))
+    features = _clean_features(details.get("features"))
 
     feature_str = ""
     if features:
@@ -85,11 +85,12 @@ def _deterministic_listing(details: Dict[str, Any], tone: str, length: str) -> s
             feature_str = ", ".join(features[:-1]) + f", and {features[-1]}"
 
     year_str = f"Built in {year_built}, this " if year_built else "This "
+    place = f" at {address}" if address else ""
     nbhd_str = f" in the desirable {neighborhood} area" if neighborhood else ""
     price_str = f" Listed at ${price:,}." if price else ""
 
     short = (
-        f"{opener} {year_str}{beds}-bedroom, {baths}-bathroom home{nbhd_str} "
+        f"{opener} {year_str}{beds}-bedroom, {baths}-bathroom home{place}{nbhd_str} "
         f"offers {sqft:,} sq ft of thoughtfully designed living space.{price_str}"
     )
 
@@ -129,10 +130,32 @@ def _deterministic_listing(details: Dict[str, Any], tone: str, length: str) -> s
     return medium + long_extra
 
 
-def _neighborhood_text(value: Any) -> str:
+def _clean_text(value: Any) -> str:
     if not isinstance(value, str):
         return ""
     return value.strip()
+
+
+def _or_default(value: Any, default: Any) -> Any:
+    if value is None or value == "":
+        return default
+    return value
+
+
+def _clean_features(value: Any) -> list:
+    if not isinstance(value, list):
+        return []
+    cleaned = []
+    for feature in value:
+        if isinstance(feature, str):
+            feature = feature.strip()
+        if feature:
+            cleaned.append(feature)
+    return cleaned
+
+
+def _neighborhood_text(value: Any) -> str:
+    return _clean_text(value)
 
 
 def listing_prompt(details: Dict[str, Any], tone: str = "professional", length: str = "medium") -> str:
