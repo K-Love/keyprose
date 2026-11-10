@@ -36,17 +36,17 @@ Names as they appear in code. Set them in the shell for the Python server, or in
 | Name | Purpose |
 |------|---------|
 | `OPENAI_API_KEY` | Bearer key for live Chat Completions. Read by `backend/services/ai_client.py` and `netlify/functions/ai_provider.mjs`. Blank or unset: demo mode. |
-| `AI_BASE_URL` | Chat Completions API root, read by those same files. Unset, the client uses the OpenAI public API root. A root that already ends in `/chat/completions` is called as-is. Any `http` or `https` Chat Completions host works, including Abacus RouteLLM. |
+| `AI_BASE_URL` | Chat Completions API root, read by those same files. Unset, both clients use the built-in root in those files. A root that already ends in `/chat/completions` is called as-is. Any `http` or `https` Chat Completions host works. |
 | `AI_MODEL` | Model id. Used ahead of `OPENAI_MODEL` when both are set. |
-| `OPENAI_MODEL` | Model id when `AI_MODEL` is unset. When both are unset, the client sends `gpt-4o-mini`. |
-| `AI_MAX_INPUT_CHARS` | Largest combined prompt and system text sent to the model, in both runtimes. Over the cap, the reply is sample copy. Unset: `8000`. `0` disables the cap. |
-| `AI_MAX_TOKENS` | Upper bound on `max_tokens` sent to the provider, in both runtimes. Unset: `800`. |
-| `AI_MAX_BODY_CHARS` | Hosted function only. Larger request bodies get HTTP 413. Unset: `24000`. `0` disables the cap. |
-| `AI_RATE_LIMIT_PER_HOUR` | Hosted function only. Live generations per client IP per hour. Unset: `10`. `0` disables. Over the cap, the reply is sample copy. |
-| `AI_DAILY_CAP` | Hosted function only. Live generations per UTC day for the whole site, shared through Netlify Blobs. Unset: `200`. `0` disables. |
-| `PORT` | Listen port for `backend/server.py`. Unset: `8000`. |
-| `PDF_OUTPUT_DIR` | Directory where the Python server writes CMA PDFs. Unset: the system temp directory. |
-| `DB_FILE` | Path for `scripts/seed_db.sh` only. Unset: `keyprose.db`, or an existing `listing_pilot.db` when `keyprose.db` is absent. The server never opens this file. |
+| `OPENAI_MODEL` | Model id when `AI_MODEL` is unset. When both are unset, both clients use the built-in model id in those files. |
+| `AI_MAX_INPUT_CHARS` | Largest combined prompt and system text sent to the model, in both runtimes. Over the cap, the reply is sample copy. Unset, the code default applies. Zero disables the cap. |
+| `AI_MAX_TOKENS` | Upper bound on `max_tokens` sent to the provider, in both runtimes. Unset, the code default applies. |
+| `AI_MAX_BODY_CHARS` | Hosted function only. Larger request bodies get HTTP 413. Unset, the code default applies. Zero disables the cap. |
+| `AI_RATE_LIMIT_PER_HOUR` | Hosted function only. Live generations per client IP per hour, counted in Netlify Blobs. Unset, the code default applies. Zero disables the cap. Over the cap, the reply is sample copy. |
+| `AI_DAILY_CAP` | Hosted function only. Live generations per UTC day for the whole site. Unset, the code default applies. Zero disables the cap. |
+| `PORT` | Listen port for `backend/server.py`. Unset, the code default applies. |
+| `PDF_OUTPUT_DIR` | Directory where the Python server writes CMA PDFs. Unset, the system temp directory is used. |
+| `DB_FILE` | Path for `scripts/seed_db.sh` only. Unset, the script uses `keyprose.db`, or an existing `listing_pilot.db` when `keyprose.db` is absent. The server never opens this file. |
 
 `AI_RATE_LIMIT_PER_HOUR`, `AI_DAILY_CAP`, and `AI_MAX_BODY_CHARS` are read only by the Netlify function. The Python server ignores them.
 

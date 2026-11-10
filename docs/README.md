@@ -48,18 +48,18 @@ Name and purpose only. Do not put secret values in the repo, the docs, or a zip.
 
 | Name | Where it is read | Purpose |
 |------|------------------|---------|
-| `OPENAI_API_KEY` | `backend/services/ai_client.py`, `netlify/functions/ai_provider.mjs` | Key sent as `Authorization: Bearer`. Unset or blank: demo mode, no outbound model call. |
-| `AI_BASE_URL` | same | API root. Unset: OpenAI's public root (`https://api.openai.com/v1`). The client posts to `{root}/chat/completions`, unless the root already ends with that path. |
+| `OPENAI_API_KEY` | `backend/services/ai_client.py`, `netlify/functions/ai_provider.mjs` | Key sent as a bearer token. Unset or blank: demo mode, no outbound model call. |
+| `AI_BASE_URL` | same | API root. Unset, both clients use the built-in root in those files. The client posts to the root plus the chat-completions path, unless the root already ends with that path. |
 | `AI_MODEL` | same | Model id. Takes priority over `OPENAI_MODEL`. |
-| `OPENAI_MODEL` | same | Model id when `AI_MODEL` is unset. Both unset: `gpt-4o-mini`. |
-| `AI_MAX_INPUT_CHARS` | same | Max characters of prompt plus system text. Over the cap: sample copy. Unset: `8000`. `0` disables. |
-| `AI_MAX_TOKENS` | same | Cap on `max_tokens`. Unset: `800`. |
-| `AI_MAX_BODY_CHARS` | `netlify/functions/ai_provider.mjs` only | Max request body. Over the cap: HTTP 413. Unset: `24000`. `0` disables. |
-| `AI_RATE_LIMIT_PER_HOUR` | hosted function only | Live calls per IP per hour. Unset: `10`. `0` disables. Counts go to the Blobs store `keyprose-ai-limits`, or to process memory if Blobs cannot be opened. |
-| `AI_DAILY_CAP` | hosted function only | Live calls per UTC day for the site. Unset: `200`. `0` disables. |
-| `PORT` | `backend/server.py`, `scripts/run_demo.sh` | Python listen port. Unset: `8000`. |
-| `PDF_OUTPUT_DIR` | `backend/services/pdf_generator.py`, `backend/demo_http.py` | CMA PDF directory for the Python server. Unset: the system temp directory. |
-| `DB_FILE` | `scripts/seed_db.sh` only | SQLite file for the sample seed. Unset: `keyprose.db`. If that file is missing and `listing_pilot.db` exists, the script updates the old file. The application does not read it. |
+| `OPENAI_MODEL` | same | Model id when `AI_MODEL` is unset. When both are unset, both clients use the built-in model id in those files. |
+| `AI_MAX_INPUT_CHARS` | same | Max characters of prompt plus system text. Over the cap: sample copy. Unset, the code default applies. Zero disables the cap. |
+| `AI_MAX_TOKENS` | same | Cap on `max_tokens`. Unset, the code default applies. |
+| `AI_MAX_BODY_CHARS` | `netlify/functions/ai_provider.mjs` only | Max request body. Over the cap: HTTP 413. Unset, the code default applies. Zero disables the cap. |
+| `AI_RATE_LIMIT_PER_HOUR` | hosted function only | Live calls per IP per hour. Unset, the code default applies. Zero disables the cap. Counts go to the Blobs store `keyprose-ai-limits`, or to process memory if Blobs cannot be opened. |
+| `AI_DAILY_CAP` | hosted function only | Live calls per UTC day for the site. Unset, the code default applies. Zero disables the cap. |
+| `PORT` | `backend/server.py`, `scripts/run_demo.sh` | Python listen port. Unset, the code default applies. |
+| `PDF_OUTPUT_DIR` | `backend/services/pdf_generator.py`, `backend/demo_http.py` | CMA PDF directory for the Python server. Unset, the system temp directory is used. |
+| `DB_FILE` | `scripts/seed_db.sh` only | SQLite file for the sample seed. Unset, the script uses `keyprose.db`. If that file is missing and `listing_pilot.db` exists, the script updates the old file. The application does not read it. |
 
 There is no `API_KEY` variable and no `DATABASE_URL` in the running code.
 
@@ -74,7 +74,7 @@ Confirm with `GET /api/health`. `ai_mode` is `live` when the key is set. `provid
 
 No key, a failed call, an over-long prompt, or a hosted rate limit: the tool returns the built-in sample copy and says so in `notice` when it can. `ai_mode` on that tool response stays `demo` unless the model text was used. Social and email can mix the two. A partial mix uses the notice `Part of this result is sample copy because a model call failed.`
 
-The privacy page says that on November 7, 2026 the public site sent live drafts to Abacus RouteLLM at `routellm.abacus.ai`. That is a hosting choice, stored in Netlify's environment, not a key in this repo.
+The privacy page says that on November 7, 2026 the public site sent live drafts to Abacus RouteLLM. That host is a Netlify environment setting, not a key in this repo.
 
 ## Local development
 

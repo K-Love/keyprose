@@ -26,7 +26,7 @@ curl -s http://localhost:8000/api/health
 
 With no key, `ai_mode` is `demo`. Open `http://localhost:8000`. Swagger is `http://localhost:8000/docs` on this Python server. On a Netlify deploy, `/docs` is the static page `frontend/api-docs.html`.
 
-`bash scripts/run_demo.sh` installs the Python requirements when FastAPI is missing and starts the server on `PORT` (default `8000`).
+`bash scripts/run_demo.sh` installs the Python requirements when FastAPI is missing and starts the server on `PORT`.
 
 The optional sample database is `bash scripts/seed_db.sh`. It creates `keyprose.db` and does not connect the app to it. If `listing_pilot.db` is already present and `keyprose.db` is not, the script updates the old file. Override the path with `DB_FILE`.
 
@@ -63,17 +63,17 @@ Add `-e` flags for `OPENAI_API_KEY`, `AI_BASE_URL`, `AI_MODEL`, `PORT`, or `PDF_
 | Name | Purpose |
 |------|---------|
 | `OPENAI_API_KEY` | Provider key. Unset or blank: demo mode. |
-| `AI_BASE_URL` | Chat Completions API root. Unset: OpenAI's public root. A root ending in `/chat/completions` is used as the full URL. |
+| `AI_BASE_URL` | Chat Completions API root. Unset, the client uses the built-in root in `backend/services/ai_client.py` and `netlify/functions/ai_provider.mjs`. A root ending in `/chat/completions` is used as the full URL. |
 | `AI_MODEL` | Model id. Overrides `OPENAI_MODEL`. |
-| `OPENAI_MODEL` | Model id when `AI_MODEL` is unset. Both unset: `gpt-4o-mini`. |
-| `AI_MAX_INPUT_CHARS` | Max prompt size sent to the model. Unset: `8000`. `0` disables. Over the cap: sample copy. |
-| `AI_MAX_TOKENS` | Cap on `max_tokens`. Unset: `800`. |
-| `AI_MAX_BODY_CHARS` | Netlify function only. Max body size. Unset: `24000`. `0` disables. Over the cap: HTTP 413. |
-| `AI_RATE_LIMIT_PER_HOUR` | Netlify function only. Live calls per IP per hour. Unset: `10`. `0` disables. |
-| `AI_DAILY_CAP` | Netlify function only. Live calls per UTC day. Unset: `200`. `0` disables. |
-| `PORT` | Python listen port. Unset: `8000`. |
-| `PDF_OUTPUT_DIR` | Python CMA PDF directory. Unset: the system temp directory. |
-| `DB_FILE` | Seed-script SQLite path only. Unset: `keyprose.db`, or existing `listing_pilot.db` when the new file is absent. |
+| `OPENAI_MODEL` | Model id when `AI_MODEL` is unset. When both are unset, the client uses the built-in model id in those files. |
+| `AI_MAX_INPUT_CHARS` | Max prompt size sent to the model. Unset, the code default applies. Zero disables the cap. Over the cap: sample copy. |
+| `AI_MAX_TOKENS` | Cap on `max_tokens`. Unset, the code default applies. |
+| `AI_MAX_BODY_CHARS` | Netlify function only. Max body size. Unset, the code default applies. Zero disables the cap. Over the cap: HTTP 413. |
+| `AI_RATE_LIMIT_PER_HOUR` | Netlify function only. Live calls per IP per hour. Unset, the code default applies. Zero disables the cap. |
+| `AI_DAILY_CAP` | Netlify function only. Live calls per UTC day. Unset, the code default applies. Zero disables the cap. |
+| `PORT` | Python listen port. Unset, the code default applies. |
+| `PDF_OUTPUT_DIR` | Python CMA PDF directory. Unset, the system temp directory is used. |
+| `DB_FILE` | Seed-script SQLite path only. Unset, the script uses `keyprose.db`, or an existing `listing_pilot.db` when the new file is absent. |
 
 ## Deploy on Netlify
 
