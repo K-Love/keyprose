@@ -1,95 +1,85 @@
-# Transfer Instructions
+# Transfer instructions
 
-This document outlines the steps to transfer the **KeyProse** codebase to the buyer. The GitHub repository is named `keyprose`.
+Hand off KeyProse as a working software asset. The buyer uses their own AI key and their own hosting. The repository does not include revenue, traffic, users, accounts, or billing.
 
----
+Source today: [https://github.com/K-Love/keyprose](https://github.com/K-Love/keyprose). License: [LICENSE.txt](LICENSE.txt) (MIT).
 
-## What's Included
+## What you are transferring
 
-- ✅ Full source code (GitHub repository)
-- ✅ All documentation (README, API reference, onboarding guide, demo script)
-- ✅ Test suite (30+ tests, all passing)
-- ✅ CI/CD pipeline (GitHub Actions)
-- ✅ Demo data (sample listings, CMA data, brand kit)
-- ✅ Release zip (`listing-pilot.zip`)
+- This Git repository: `frontend/`, `backend/`, `netlify/`, `docs/`, `demo_data/`, `scripts/`, `Dockerfile`, `netlify.toml`, and GitHub Actions in `.github/workflows/ci.yml`
+- The public domains `keyprose.com` and `keyprose.app`, registered at Porkbun
+- The Netlify site that serves them, named `listingp`
+- Operator identity on the Privacy and Terms pages (Kevin Love, Backstage Interactive)
 
----
+A release zip is not part of the git history. Build one with `bash scripts/build_release.sh` or `make release`. Output: `release/keyprose-release.zip`. The script packs tracked files and untracked files that are not gitignored. It excludes `.git`, `.env` and other env files, `*.db` / `*.sqlite` / `*.sqlite3`, `node_modules`, `__pycache__`, `.pytest_cache`, `.netlify`, and any zip already in `release/`. The old committed `release/listing-pilot.zip` was a stale archive and has been removed. Docs do not require a binary zip in git, so the replacement is the script.
 
-## Transfer Steps
+## Checklist
 
-### Step 1: GitHub Repository Transfer
+### GitHub
 
-1. Seller goes to: `https://github.com/SELLER_USERNAME/keyprose/settings`
-2. Scroll to **"Danger Zone"** → **"Transfer"**
-3. Enter buyer's GitHub username
-4. Confirm transfer
+1. Open `https://github.com/K-Love/keyprose/settings`.
+2. Under **Danger Zone**, transfer the repository to the buyer.
+3. Buyer clones the new remote and runs the tests in [INSTALLATION.md](INSTALLATION.md).
 
-**Alternative:** Buyer forks the repo, seller deletes their copy after confirmation.
+A fork plus deleting the original is a weaker handoff. Transfer the repo if the buyer should own the history and the issues.
 
-### Step 2: Verify Transfer
+After the transfer, update the GitHub link in `frontend/privacy.html` (`https://github.com/K-Love/keyprose`) and any clone URLs you publish. That edit is a content change to the privacy page. Make it when you update the operator identity, not before.
 
-Buyer confirms:
+### Netlify
+
+The production site name is `listingp`. Do not rename it.
+
+**Transfer the site** to the buyer's Netlify team if both sides can do that in the Netlify UI. The site keeps its settings, environment variables, and domain attachments. Then rotate every secret (next section). The buyer confirms the publish directory is still `frontend` and that `netlify.toml` is the config the site uses.
+
+**Or create a new site** from the transferred repo. Set the publish directory to `frontend`, leave the build command empty, set environment variables, deploy, and attach the domains. The new site can have any name. `listingp` can be left in place until DNS has moved, then deleted so it does not keep serving the domains.
+
+`netlify/functions/api.mjs` is the hosted API. Losing the Netlify site does not lose the Python server in `backend/server.py`.
+
+### Domains at Porkbun
+
+`keyprose.com` and `keyprose.app` are both registered at Porkbun. Transfer or repoint each one.
+
+- **Keep Porkbun.** Update DNS so the names point at the buyer's Netlify site, or at another host. `www.keyprose.com` should redirect to `https://keyprose.com`. `keyprose.app` and `www.keyprose.app` should serve the same site. Those redirects are a DNS or host setting. They are not in `netlify.toml`.
+- **Move to another registrar.** Unlock the domain at Porkbun, copy the authorization (EPP) code, and start the transfer at the new registrar. Do this separately for `keyprose.com` and `keyprose.app`. ICANN lets the registrar refuse a transfer for 60 days after registration or after a previous transfer. A change to the registrant contact can start that same lock. Wait out the window if it applies. DNS can move with the domain or stay where it is. The website host is whatever the DNS records point at, which can be Netlify or something else.
+
+### Keys
+
+Rotate anything the old operator can still see.
+
+- `OPENAI_API_KEY` in the Netlify site (every deploy context) and in any shell or host environment the buyer uses. Create a new key at the provider. Revoke the old one. The code reads the name `OPENAI_API_KEY` even when the host is not OpenAI. Set `AI_BASE_URL` and `AI_MODEL` for the buyer's host.
+- Netlify personal access tokens and the Netlify login on the old account.
+- Porkbun account access, and the registrar lock once a transfer finishes.
+- GitHub access for the previous owner. Remove the old account from the repo after the transfer.
+
+Do not send key values in email, in this repo, or inside `keyprose-release.zip`.
+
+### Privacy and Terms
+
+`frontend/privacy.html` and `frontend/terms.html` are the legal pages. They say "I" is Kevin Love and that he runs the site as Backstage Interactive, a one-person studio. Contact is the form on backstageinteractive.com. The privacy page also links to `https://github.com/K-Love/keyprose` and describes the AI host as Abacus RouteLLM on November 7, 2026.
+
+Rewrite the operator name, the studio name, the contact path, and the GitHub link so they match the buyer. Read the provider and hosting sentences again after you choose a host and an AI vendor.
+
+One sentence is already behind the code. The privacy page says the neighborhood is not added to the live listing request. `listingPrompt` in `backend/ai/listing_writer.py` and `netlify/functions/ai_provider.mjs` includes a neighborhood when the field is non-empty. Fix that sentence in the same edit. This transfer does not change those pages by itself.
+
+The footers and the rest of the UI stay as they are until you choose to edit them.
+
+## After transfer
+
 ```bash
-git clone https://github.com/BUYER_USERNAME/keyprose.git
-cd keyprose
-python backend/server.py
-# Visit http://localhost:8000 — should work immediately
+python3 -m pip install -r backend/requirements.txt
+python3 -m pytest backend/tests/
+npm ci
+node --test netlify/api.test.mjs
+python3 backend/server.py
 ```
 
-### Step 3: Update Repository References
+`GET /api/health` should return `ai_mode` of `demo` until the buyer's key is set, then `live`.
 
-After transfer, update these files with your GitHub username:
-- `docs/README.md` — replace `YOUR_USERNAME` with your GitHub username
-- `.github/workflows/ci.yml` — badge URL (optional)
+Read [../docs/ONBOARDING.md](../docs/ONBOARDING.md) and [../docs/README.md](../docs/README.md).
 
-### Step 4: Deploy to Your Infrastructure
+## Limits the buyer should hear
 
-Follow [INSTALLATION.md](INSTALLATION.md) to deploy to Railway, Render, or Fly.io.
-
-### Step 5: Configure Your OpenAI Key
-
-```bash
-# On your deployment platform, set:
-OPENAI_API_KEY=sk-your-key-here
-```
-
----
-
-## Assets Checklist
-
-| Asset | Location | Status |
-|-------|----------|--------|
-| Source code | GitHub repo | ✅ Included |
-| Backend (FastAPI) | `backend/` | ✅ Included |
-| Frontend (HTML/CSS/JS) | `frontend/` | ✅ Included |
-| AI modules | `backend/ai/` | ✅ Included |
-| Test suite | `backend/tests/` | ✅ Included |
-| Documentation | `docs/` | ✅ Included |
-| Demo data | `demo_data/` | ✅ Included |
-| CI/CD pipeline | `.github/workflows/` | ✅ Included |
-| Release zip | `release/listing-pilot.zip` | ✅ Included |
-
----
-
-## Post-Transfer Support
-
-The codebase is fully documented and self-contained. For questions:
-
-1. Read `docs/ONBOARDING.md` — covers all common setup scenarios
-2. Read `docs/API_REFERENCE.md` — full endpoint documentation
-3. Run `pytest backend/tests/ -v` — verify everything works
-4. Check `http://localhost:8000/docs` — interactive API explorer
-
----
-
-## License
-
-This software is transferred under the MIT License. See [LICENSE.txt](LICENSE.txt).
-
-The buyer receives full rights to:
-- Use commercially
-- Modify and customize
-- Resell or white-label
-- Deploy to any infrastructure
-
-No ongoing royalties or attribution required (though appreciated).
+- No accounts, no billing, no saved customer listings. `scripts/seed_db.sh` writes a local SQLite file the app never opens. The filename is now `keyprose.db`. An existing `listing_pilot.db` is still the file the script updates when `keyprose.db` does not exist.
+- The public Netlify API accepts partial JSON: a listing body only needs `property_details` to be an object, and the other tools only require one or two keys. Missing fields become generic defaults. Truncated JSON is rejected. The Python server is stricter and returns 422 for a missing required field.
+- Sample copy adds generic lines the user did not type, including extra home features, Austin social wording, stand-in email details, and a fixed market sentence on the CMA.
+- Drafts are not sent, posted, or filed with an MLS. CMA output is not an appraisal.
