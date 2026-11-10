@@ -15,8 +15,8 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/listing-pilot.git
-cd listing-pilot
+git clone https://github.com/YOUR_USERNAME/keyprose.git
+cd keyprose
 ```
 
 ### 2. Install Dependencies
@@ -81,7 +81,7 @@ docker run -p 8000:8000 \
 
 1. Push code to GitHub
 2. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
-3. Select your `listing-pilot` repo
+3. Select your `keyprose` repo
 4. Add environment variable: `OPENAI_API_KEY`
 5. Deploy — Railway auto-detects Python
 
