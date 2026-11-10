@@ -39,7 +39,7 @@ The production site name is `listingp`. Do not rename it.
 
 `keyprose.com` and `keyprose.app` are both registered at Porkbun. Transfer or repoint each one.
 
-- **Keep Porkbun.** Update DNS so the names point at the buyer's Netlify site, or at another host. `www.keyprose.com` should redirect to `https://keyprose.com`. `keyprose.app` and `www.keyprose.app` should serve the same site. Those redirects are a DNS or host setting. They are not in `netlify.toml`.
+- **Keep Porkbun.** Update DNS so the names point at the buyer's Netlify site, or at another host. `www.keyprose.com` should redirect to `https://keyprose.com`. That www redirect is a DNS or host setting. It is not in `netlify.toml`. `keyprose.app` and `www.keyprose.app` redirect to `https://keyprose.com`, and the path and query string stay on the URL. Those rules are at the top of `frontend/_redirects`. Netlify reads that file before `netlify.toml`. The same four rules are repeated at the top of `netlify.toml`.
 - **Move to another registrar.** Unlock the domain at Porkbun, copy the authorization (EPP) code, and start the transfer at the new registrar. Do this separately for `keyprose.com` and `keyprose.app`. ICANN lets the registrar refuse a transfer for 60 days after registration or after a previous transfer. A change to the registrant contact can start that same lock. Wait out the window if it applies. DNS can move with the domain or stay where it is. The website host is whatever the DNS records point at, which can be Netlify or something else.
 
 ### Keys

@@ -8,6 +8,35 @@
 [functions.api]
   timeout = 26
 
+# Same four rules are first in frontend/_redirects. Netlify processes that
+# file before this one, so those copies are the ones that match. Forced so a
+# file at the path does not win. No query on the target, so the query string
+# is kept. These hosts only; keyprose.com rules below are unchanged.
+
+[[redirects]]
+  from = "http://keyprose.app/*"
+  to = "https://keyprose.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://keyprose.app/*"
+  to = "https://keyprose.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.keyprose.app/*"
+  to = "https://keyprose.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.keyprose.app/*"
+  to = "https://keyprose.com/:splat"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/docs"
   to = "/api-docs.html"
