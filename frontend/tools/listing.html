@@ -7,43 +7,72 @@
   <link rel="canonical" href="https://keyprose.com/tools/listing" />
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <style>
-    :root { --primary:#1e50a0; --accent:#f59e0b; --bg:#f8fafc; --card:#fff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0; --radius:12px; }
+    :root { --primary:#1e50a0; --accent:#f59e0b; --bg:#f8fafc; --card:#fff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0; --radius:12px; --danger:#b91c1c; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); }
     nav { background:var(--primary); color:#fff; padding:0.65rem 1.25rem; display:flex; align-items:center; justify-content:space-between; min-height:60px; height:auto; flex-wrap:wrap; gap:0.5rem 1rem; }
     .nav-brand { font-size:1.1rem; font-weight:700; text-decoration:none; color:#fff; display:inline-flex; align-items:center; gap:8px; }
     .nav-links { display:flex; flex-wrap:wrap; gap:0.45rem 0.9rem; }
-    .nav-links a { color:rgba(255,255,255,0.85); text-decoration:none; font-size:0.88rem; }
+    .nav-links a { color:rgba(255,255,255,0.85); text-decoration:none; font-size:0.88rem; border-radius:4px; }
     .nav-links a:hover { color:#fff; }
+    .nav-links a:focus-visible { outline:2px solid #fde68a; outline-offset:3px; }
     .page-header { background:linear-gradient(135deg,var(--primary),#2563eb); color:#fff; padding:2.5rem 2rem; }
     .page-header h1 { font-size:2rem; font-weight:800; }
-    .page-header p { opacity:0.85; margin-top:0.5rem; }
+    .page-header p { opacity:0.85; margin-top:0.5rem; max-width:40rem; }
     .container { max-width:1100px; margin:2rem auto; padding:0 2rem; display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
-    @media(max-width:768px) { .container { grid-template-columns:1fr; } }
-    .card { background:var(--card); border-radius:var(--radius); padding:1.75rem; box-shadow:0 4px 24px rgba(30,80,160,0.08); border:1px solid var(--border); }
+    .card { background:var(--card); border-radius:var(--radius); padding:1.75rem; box-shadow:0 4px 24px rgba(30,80,160,0.08); border:1px solid var(--border); min-width:0; }
     .card h2 { font-size:1.1rem; font-weight:700; margin-bottom:1.25rem; display:flex; align-items:center; gap:8px; }
-    label { display:block; font-size:0.85rem; font-weight:600; color:var(--muted); margin-bottom:0.35rem; margin-top:1rem; }
-    label:first-of-type { margin-top:0; }
-    input, select, textarea { width:100%; padding:0.6rem 0.85rem; border:1.5px solid var(--border); border-radius:8px; font-size:0.95rem; font-family:inherit; color:var(--text); background:#fff; transition:border-color 0.2s; }
-    input:focus, select:focus, textarea:focus { outline:none; border-color:var(--primary); }
+    .form-hint { font-size:0.82rem; color:#475569; margin:0.15rem 0 0.35rem; }
+    .field { margin-top:1rem; min-width:0; }
+    label { display:block; font-size:0.85rem; font-weight:600; color:var(--muted); margin-bottom:0.35rem; }
+    .req { color:var(--danger); }
+    .optional { font-weight:500; }
+    input, select, textarea { width:100%; min-width:0; padding:0.6rem 0.85rem; border:1.5px solid var(--border); border-radius:8px; font-size:1rem; font-family:inherit; color:var(--text); background:#fff; }
+    input:focus, select:focus, textarea:focus { outline:2px solid var(--primary); outline-offset:1px; border-color:var(--primary); }
+    input.is-invalid, select.is-invalid, textarea.is-invalid { border-color:var(--danger); }
+    input.is-invalid:focus, select.is-invalid:focus, textarea.is-invalid:focus { outline-color:var(--danger); }
     textarea { resize:vertical; min-height:80px; }
-    .row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    .btn { display:inline-flex; align-items:center; gap:8px; padding:0.75rem 1.5rem; border-radius:8px; font-weight:600; font-size:1rem; cursor:pointer; border:none; transition:all 0.2s; width:100%; justify-content:center; margin-top:1.25rem; }
+    .field-error { color:var(--danger); font-size:0.8rem; font-weight:600; margin-top:0.3rem; }
+    .field-hint { font-size:0.8rem; color:#475569; margin-top:0.45rem; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem; }
+    .row .field { margin-top:0; }
+    .btn { display:inline-flex; align-items:center; gap:8px; padding:0.75rem 1.5rem; border-radius:8px; font-weight:600; font-size:1rem; cursor:pointer; border:none; transition:background 0.2s; width:100%; justify-content:center; margin-top:1.25rem; }
     .btn-primary { background:var(--primary); color:#fff; }
     .btn-primary:hover { background:#163a78; }
-    .btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
-    .result-box { background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; padding:1.25rem; min-height:200px; font-size:0.95rem; line-height:1.7; white-space:pre-wrap; color:var(--text); }
+    .btn-primary:focus-visible { outline:2px solid #fde68a; outline-offset:2px; }
+    .btn-primary:disabled { opacity:0.65; cursor:not-allowed; background:var(--primary); }
+    .form-error, .request-error { border-radius:8px; padding:0.7rem 0.85rem; font-size:0.88rem; font-weight:600; margin-top:1rem; }
+    .form-error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+    .request-error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+    .result-box { background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; padding:1.25rem; min-height:200px; font-size:0.95rem; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; color:var(--text); }
+    .result-box.is-loading { opacity:0.55; }
     .result-placeholder { color:var(--muted); font-style:italic; }
-    .copy-btn { display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1rem; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--muted); transition:all 0.2s; margin-top:0.75rem; }
-    .copy-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .status { font-size:0.85rem; font-weight:700; color:var(--primary); margin-bottom:0.6rem; }
+    .copy-btn { display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1rem; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--primary); transition:background 0.2s, color 0.2s, border-color 0.2s; margin-top:0.75rem; }
+    .copy-btn:hover { border-color:var(--primary); background:#eff6ff; }
+    .copy-btn:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+    .copy-btn:disabled { opacity:0.55; cursor:not-allowed; }
     .copy-btn.copied { background:var(--primary); color:#fff; border-color:var(--primary); }
-    .meta { display:flex; gap:1rem; margin-top:0.75rem; flex-wrap:wrap; }
+    .copy-status { font-size:0.82rem; color:#475569; margin-top:0.45rem; }
+    .meta { display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap; }
     .meta-badge { background:#eff6ff; color:var(--primary); font-size:0.78rem; font-weight:600; padding:3px 10px; border-radius:20px; }
-    .spinner { display:none; width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; }
+    .spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; flex:none; }
     @keyframes spin { to { transform:rotate(360deg); } }
-    .demo-note { background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:0.75rem 1rem; font-size:0.85rem; color:#92400e; margin-bottom:1.25rem; }
-    .sample-btn { background:none; border:1.5px dashed var(--border); border-radius:8px; padding:0.5rem 1rem; font-size:0.85rem; color:var(--muted); cursor:pointer; width:100%; margin-top:0.75rem; transition:all 0.2s; }
+    .demo-note { background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:0.75rem 1rem; font-size:0.85rem; color:#92400e; margin-bottom:0.85rem; }
+    .sample-btn { background:none; border:1.5px dashed var(--border); border-radius:8px; padding:0.5rem 1rem; font-size:0.85rem; color:var(--muted); cursor:pointer; width:100%; margin-top:0.75rem; }
     .sample-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .sample-btn:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+    [hidden] { display:none !important; }
+    @media (max-width:768px) {
+      .container { grid-template-columns:1fr; }
+    }
+    @media (max-width:640px) {
+      .page-header { padding:1.75rem 1rem; }
+      .page-header h1 { font-size:1.65rem; }
+      .container { margin:1.25rem auto; padding:0 1rem; gap:1.25rem; }
+      .card { padding:1.15rem; }
+      .row { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -51,7 +80,7 @@
 <nav>
   <a href="/" class="nav-brand"><img src="/assets/favicon.svg" alt="" width="28" height="28" /> KeyProse</a>
   <div class="nav-links">
-    <a href="/tools/listing">Listings</a>
+    <a href="/tools/listing" aria-current="page">Listings</a>
     <a href="/tools/cma">CMA</a>
     <a href="/tools/social">Social</a>
     <a href="/tools/email">Email</a>
@@ -68,88 +97,107 @@
 </div>
 
 <div class="container">
-  <!-- Form -->
   <div class="card">
     <h2>📝 Property Details</h2>
-    <div class="demo-note">Click "Load Sample" to prefill with example data, or enter your own.</div>
+    <form id="listing-form" novalidate>
+      <div class="demo-note">Load Sample Property fills an example, or type your own details.</div>
+      <p class="form-hint" id="required-hint">Address, bedrooms, bathrooms, square feet, and list price are required.</p>
 
-    <label>Property Address</label>
-    <input type="text" id="address" placeholder="123 Maple Street, Austin, TX 78701" />
-
-    <div class="row">
-      <div>
-        <label>Bedrooms</label>
-        <input type="number" id="beds" placeholder="4" min="1" max="20" />
+      <div class="field">
+        <label for="address">Property Address <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="address" name="address" required autocomplete="street-address" placeholder="e.g. 123 Maple Street, Austin, TX 78701" aria-describedby="address-error" />
+        <p class="field-error" id="address-error" hidden></p>
       </div>
-      <div>
-        <label>Bathrooms</label>
-        <input type="number" id="baths" placeholder="3" min="1" max="20" step="0.5" />
+
+      <div class="row">
+        <div class="field">
+          <label for="beds">Bedrooms <span class="req" aria-hidden="true">*</span></label>
+          <input type="number" id="beds" name="beds" required inputmode="numeric" min="1" max="20" step="1" placeholder="e.g. 4" aria-describedby="beds-error" />
+          <p class="field-error" id="beds-error" hidden></p>
+        </div>
+        <div class="field">
+          <label for="baths">Bathrooms <span class="req" aria-hidden="true">*</span></label>
+          <input type="number" id="baths" name="baths" required inputmode="decimal" min="0.5" max="20" step="0.5" placeholder="e.g. 2.5" aria-describedby="baths-error" />
+          <p class="field-error" id="baths-error" hidden></p>
+        </div>
       </div>
-    </div>
 
-    <div class="row">
-      <div>
-        <label>Square Footage</label>
-        <input type="number" id="sqft" placeholder="2400" />
+      <div class="row">
+        <div class="field">
+          <label for="sqft">Square Footage <span class="req" aria-hidden="true">*</span></label>
+          <input type="number" id="sqft" name="sqft" required inputmode="numeric" min="100" max="100000" step="1" placeholder="e.g. 2400" aria-describedby="sqft-error" />
+          <p class="field-error" id="sqft-error" hidden></p>
+        </div>
+        <div class="field">
+          <label for="year_built">Year Built <span class="optional">(optional)</span></label>
+          <input type="number" id="year_built" name="year_built" inputmode="numeric" min="1800" step="1" placeholder="e.g. 2018" aria-describedby="year_built-error" />
+          <p class="field-error" id="year_built-error" hidden></p>
+        </div>
       </div>
-      <div>
-        <label>Year Built</label>
-        <input type="number" id="year_built" placeholder="2018" />
+
+      <div class="field">
+        <label for="price">List Price ($) <span class="req" aria-hidden="true">*</span></label>
+        <input type="number" id="price" name="price" required inputmode="decimal" min="1" step="1" placeholder="e.g. 650000" aria-describedby="price-error" />
+        <p class="field-error" id="price-error" hidden></p>
       </div>
-    </div>
 
-    <label>List Price ($)</label>
-    <input type="number" id="price" placeholder="650000" />
-
-    <label>Neighborhood / Area</label>
-    <input type="text" id="neighborhood" placeholder="South Congress" />
-
-    <label>Key Features (one per line)</label>
-    <textarea id="features" placeholder="open floor plan&#10;chef's kitchen&#10;pool&#10;3-car garage"></textarea>
-
-    <div class="row">
-      <div>
-        <label>Tone</label>
-        <select id="tone">
-          <option value="professional">Professional</option>
-          <option value="luxury">Luxury</option>
-          <option value="family">Family</option>
-          <option value="investment">Investment</option>
-          <option value="casual">Casual</option>
-        </select>
+      <div class="field">
+        <label for="neighborhood">Neighborhood / Area <span class="optional">(optional)</span></label>
+        <input type="text" id="neighborhood" name="neighborhood" placeholder="e.g. South Congress" />
       </div>
-      <div>
-        <label>Length</label>
-        <select id="length">
-          <option value="short">Short</option>
-          <option value="medium" selected>Medium</option>
-          <option value="long">Long</option>
-        </select>
-      </div>
-    </div>
 
-    <button class="sample-btn" onclick="loadSample()">📋 Load Sample Property</button>
-    <button class="btn btn-primary" id="generateBtn" onclick="generateListing()">
-      <span class="spinner" id="spinner"></span>
-      ✨ Generate Listing
-    </button>
+      <div class="field">
+        <label for="features">Key Features <span class="optional">(optional, one per line)</span></label>
+        <textarea id="features" name="features" placeholder="e.g. open floor plan&#10;chef's kitchen&#10;pool"></textarea>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="tone">Tone</label>
+          <select id="tone" name="tone">
+            <option value="professional">Professional</option>
+            <option value="luxury">Luxury</option>
+            <option value="family">Family</option>
+            <option value="investment">Investment</option>
+            <option value="casual">Casual</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="length">Length</label>
+          <select id="length" name="length">
+            <option value="short">Short</option>
+            <option value="medium" selected>Medium</option>
+            <option value="long">Long</option>
+          </select>
+        </div>
+      </div>
+      <p class="field-hint">Short is about 100 words, medium about 200, and long about 350.</p>
+
+      <button type="button" class="sample-btn" id="sampleBtn">📋 Load Sample Property</button>
+      <p class="form-error" id="form-error" role="alert" hidden></p>
+      <button type="submit" class="btn btn-primary" id="generateBtn">
+        <span class="spinner" id="spinner" hidden></span>
+        <span id="generateLabel">✨ Generate listing</span>
+      </button>
+    </form>
   </div>
 
-  <!-- Result -->
   <div class="card">
     <h2>📄 Generated Listing</h2>
-    <div class="result-box" id="result">
-      <span class="result-placeholder">Your listing description will appear here...</span>
+    <p class="status" id="status" role="status" hidden></p>
+    <div class="result-box" id="result" role="status" aria-live="polite" aria-atomic="true">
+      <span class="result-placeholder">Your listing description will appear here.</span>
     </div>
-    <div class="meta" id="meta" style="display:none;">
+    <p class="request-error" id="request-error" role="alert" hidden></p>
+    <div class="meta" id="meta" hidden>
       <span class="ai-mode-badge is-demo" id="aiBadge" hidden>Demo output</span>
       <span class="meta-badge" id="wordCount"></span>
       <span class="meta-badge" id="toneLabel"></span>
+      <span class="meta-badge" id="lengthLabel"></span>
     </div>
     <p class="ai-mode-notice" id="aiNotice" hidden></p>
-    <button class="copy-btn" id="copyBtn" onclick="copyResult()" style="display:none;">
-      📋 Copy to Clipboard
-    </button>
+    <button type="button" class="copy-btn" id="copyBtn" hidden>📋 Copy to Clipboard</button>
+    <p class="copy-status" id="copyStatus" role="status" hidden></p>
   </div>
 </div>
 
@@ -158,85 +206,312 @@
 </footer>
 <script src="/assets/ai-mode.js"></script>
 <script>
-  const API_BASE = '';
+  const FIELD_IDS = ["address", "beds", "baths", "sqft", "year_built", "price"];
+  let generating = false;
+  let listingText = "";
+  let copyTimer = 0;
 
-  function loadSample() {
-    document.getElementById('address').value = '123 Maple Street, Austin, TX 78701';
-    document.getElementById('beds').value = '4';
-    document.getElementById('baths').value = '3';
-    document.getElementById('sqft').value = '2400';
-    document.getElementById('year_built').value = '2018';
-    document.getElementById('price').value = '650000';
-    document.getElementById('neighborhood').value = 'South Congress';
-    document.getElementById('features').value = "open floor plan\nchef's kitchen\npool\n3-car garage\nsmart home system";
-    document.getElementById('tone').value = 'luxury';
-    document.getElementById('length').value = 'medium';
+  function fieldValue(id) {
+    return document.getElementById(id).value.trim();
+  }
+
+  function clearFieldErrors() {
+    const summary = document.getElementById("form-error");
+    summary.hidden = true;
+    summary.textContent = "";
+    FIELD_IDS.forEach(function (id) {
+      const input = document.getElementById(id);
+      const error = document.getElementById(id + "-error");
+      input.classList.remove("is-invalid");
+      input.removeAttribute("aria-invalid");
+      if (error) {
+        error.hidden = true;
+        error.textContent = "";
+      }
+    });
+  }
+
+  function showFieldErrors(errors) {
+    clearFieldErrors();
+    const keys = Object.keys(errors);
+    const summary = document.getElementById("form-error");
+    summary.hidden = false;
+    summary.textContent = "Fix the highlighted fields before generating.";
+    keys.forEach(function (key) {
+      const input = document.getElementById(key);
+      const error = document.getElementById(key + "-error");
+      input.classList.add("is-invalid");
+      input.setAttribute("aria-invalid", "true");
+      error.hidden = false;
+      error.textContent = errors[key];
+    });
+    document.getElementById(keys[0]).focus();
+  }
+
+  function showRequestError(message) {
+    const error = document.getElementById("request-error");
+    error.hidden = false;
+    error.textContent = message;
+  }
+
+  function validate() {
+    const errors = {};
+    if (fieldValue("address").length < 5) {
+      errors.address = "Enter the street address, city, and state.";
+    }
+
+    const bedsRaw = fieldValue("beds");
+    const beds = Number(bedsRaw);
+    if (!bedsRaw || !Number.isInteger(beds) || beds < 1 || beds > 20) {
+      errors.beds = "Enter bedrooms as a whole number from 1 to 20.";
+    }
+
+    const bathsRaw = fieldValue("baths");
+    const baths = Number(bathsRaw);
+    const halfStep = Number.isFinite(baths) && Math.abs(baths * 2 - Math.round(baths * 2)) < 0.001;
+    if (!bathsRaw || !halfStep || baths < 0.5 || baths > 20) {
+      errors.baths = "Enter bathrooms from 0.5 to 20, using half-bath steps such as 2.5.";
+    }
+
+    const sqftRaw = fieldValue("sqft");
+    const sqft = Number(sqftRaw);
+    if (!sqftRaw || !Number.isInteger(sqft) || sqft < 100 || sqft > 100000) {
+      errors.sqft = "Enter square feet as a whole number of at least 100.";
+    }
+
+    const priceRaw = fieldValue("price");
+    const price = Number(priceRaw);
+    if (!priceRaw || !Number.isFinite(price) || price <= 0 || price > 500000000) {
+      errors.price = "Enter a list price greater than 0.";
+    }
+
+    const yearRaw = fieldValue("year_built");
+    if (yearRaw) {
+      const year = Number(yearRaw);
+      const maxYear = new Date().getFullYear() + 1;
+      if (!Number.isInteger(year) || year < 1800 || year > maxYear) {
+        errors.year_built = "Enter a year from 1800 to " + maxYear + ", or leave this blank.";
+      }
+    }
+    return errors;
+  }
+
+  function payloadFromForm() {
+    const features = fieldValue("features").split("\n").map(function (line) {
+      return line.trim();
+    }).filter(Boolean);
+    const details = {
+      address: fieldValue("address"),
+      beds: Number(fieldValue("beds")),
+      baths: Number(fieldValue("baths")),
+      sqft: Number(fieldValue("sqft")),
+      price: Number(fieldValue("price")),
+      features: features,
+    };
+    const year = fieldValue("year_built");
+    const neighborhood = fieldValue("neighborhood");
+    if (year) details.year_built = Number(year);
+    if (neighborhood) details.neighborhood = neighborhood;
+    return {
+      property_details: details,
+      tone: document.getElementById("tone").value,
+      length: document.getElementById("length").value,
+    };
+  }
+
+  function setBusy(busy) {
+    const button = document.getElementById("generateBtn");
+    const label = document.getElementById("generateLabel");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+    document.getElementById("spinner").hidden = !busy;
+    button.disabled = busy;
+    button.setAttribute("aria-busy", busy ? "true" : "false");
+    const copyBtn = document.getElementById("copyBtn");
+    copyBtn.disabled = busy || !listingText;
+    if (busy) {
+      window.clearTimeout(copyTimer);
+      copyBtn.classList.remove("copied");
+      copyBtn.textContent = "📋 Copy to Clipboard";
+      document.getElementById("copyStatus").hidden = true;
+      label.textContent = "✨ Generating listing…";
+      status.hidden = false;
+      status.textContent = "Writing the listing…";
+      result.classList.add("is-loading");
+      return;
+    }
+    label.textContent = listingText ? "✨ Regenerate listing" : "✨ Generate listing";
+    status.hidden = true;
+    status.textContent = "";
+    result.classList.remove("is-loading");
+  }
+
+  function showListing(data) {
+    listingText = String(data.listing_text);
+    const result = document.getElementById("result");
+    result.textContent = listingText;
+    if (window.KeyProse) {
+      KeyProse.applyBadge(document.getElementById("aiBadge"), data);
+      KeyProse.applyNotice(document.getElementById("aiNotice"), data);
+    }
+    const words = data.word_count || listingText.split(/\s+/).filter(Boolean).length;
+    document.getElementById("wordCount").textContent = words + " words";
+    const tone = document.getElementById("tone");
+    const length = document.getElementById("length");
+    document.getElementById("toneLabel").textContent = tone.options[tone.selectedIndex].text;
+    document.getElementById("lengthLabel").textContent = length.value.charAt(0).toUpperCase() + length.value.slice(1);
+    document.getElementById("meta").hidden = false;
+    const copyBtn = document.getElementById("copyBtn");
+    copyBtn.hidden = false;
+    copyBtn.disabled = false;
+    document.getElementById("request-error").hidden = true;
+  }
+
+  async function messageForResponse(response) {
+    if (response.status === 422) {
+      return "Those property details were not accepted. Check the form and try again.";
+    }
+    return "The listing could not be generated. Please try again.";
   }
 
   async function generateListing() {
-    const btn = document.getElementById('generateBtn');
-    const spinner = document.getElementById('spinner');
-    const resultEl = document.getElementById('result');
-
-    const features = document.getElementById('features').value
-      .split('\n').map(f => f.trim()).filter(Boolean);
-
-    const payload = {
-      property_details: {
-        address: document.getElementById('address').value || '123 Main St',
-        beds: parseInt(document.getElementById('beds').value) || 3,
-        baths: parseFloat(document.getElementById('baths').value) || 2,
-        sqft: parseInt(document.getElementById('sqft').value) || 1800,
-        year_built: parseInt(document.getElementById('year_built').value) || null,
-        price: parseInt(document.getElementById('price').value) || 0,
-        neighborhood: document.getElementById('neighborhood').value || '',
-        features: features,
-      },
-      tone: document.getElementById('tone').value,
-      length: document.getElementById('length').value,
-    };
-
-    btn.disabled = true;
-    spinner.style.display = 'block';
-    resultEl.innerHTML = '<span class="result-placeholder">Generating your listing...</span>';
-
+    if (generating) return;
+    const errors = validate();
+    if (Object.keys(errors).length) {
+      showFieldErrors(errors);
+      return;
+    }
+    clearFieldErrors();
+    document.getElementById("request-error").hidden = true;
+    generating = true;
+    setBusy(true);
     try {
-      const res = await fetch(`${API_BASE}/api/listing-writer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const response = await fetch("/api/listing-writer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloadFromForm()),
       });
-
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      const data = await res.json();
-
-      resultEl.textContent = data.listing_text;
-      if (window.KeyProse) {
-        KeyProse.applyBadge(document.getElementById('aiBadge'), data);
-        KeyProse.applyNotice(document.getElementById('aiNotice'), data);
+      if (!response.ok) {
+        showRequestError(await messageForResponse(response));
+        return;
       }
-      document.getElementById('wordCount').textContent = `${data.word_count || data.listing_text.split(' ').length} words`;
-      document.getElementById('toneLabel').textContent = payload.tone.charAt(0).toUpperCase() + payload.tone.slice(1);
-      document.getElementById('meta').style.display = 'flex';
-      document.getElementById('copyBtn').style.display = 'inline-flex';
-
+      const data = await response.json();
+      if (!data.listing_text) {
+        showRequestError("The listing came back empty. Please try again.");
+        return;
+      }
+      showListing(data);
     } catch (err) {
-      resultEl.innerHTML = `<span style="color:#dc2626;">Error: ${err.message}. The demo API did not respond.</span>`;
+      showRequestError("Could not reach the listing service. Check your connection and try again.");
     } finally {
-      btn.disabled = false;
-      spinner.style.display = 'none';
+      generating = false;
+      setBusy(false);
     }
   }
 
-  function copyResult() {
-    const text = document.getElementById('result').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById('copyBtn');
-      btn.textContent = '✅ Copied!';
-      btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = '📋 Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
-    });
+  function loadSample() {
+    document.getElementById("address").value = "123 Maple Street, Austin, TX 78701";
+    document.getElementById("beds").value = "4";
+    document.getElementById("baths").value = "3";
+    document.getElementById("sqft").value = "2400";
+    document.getElementById("year_built").value = "2018";
+    document.getElementById("price").value = "650000";
+    document.getElementById("neighborhood").value = "South Congress";
+    document.getElementById("features").value = "open floor plan\nchef's kitchen\npool\n3-car garage\nsmart home system";
+    document.getElementById("tone").value = "luxury";
+    document.getElementById("length").value = "medium";
+    clearFieldErrors();
   }
+
+  function copyWithSelection(text) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.top = "0";
+    area.style.left = "0";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (err) {
+      ok = false;
+    }
+    area.remove();
+    return ok;
+  }
+
+  function selectResult() {
+    const result = document.getElementById("result");
+    const range = document.createRange();
+    range.selectNodeContents(result);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function flashCopy(ok) {
+    const button = document.getElementById("copyBtn");
+    const status = document.getElementById("copyStatus");
+    window.clearTimeout(copyTimer);
+    button.classList.toggle("copied", ok);
+    button.textContent = ok ? "Copied" : "Copy failed";
+    status.hidden = false;
+    status.textContent = ok
+      ? "Listing copied to the clipboard."
+      : "Couldn't copy automatically. The listing text is selected, so you can copy it with your keyboard.";
+    if (!ok) selectResult();
+    copyTimer = window.setTimeout(function () {
+      button.textContent = "📋 Copy to Clipboard";
+      button.classList.remove("copied");
+      status.hidden = true;
+      status.textContent = "";
+    }, 2500);
+  }
+
+  async function copyResult() {
+    if (!listingText || generating) return;
+    let ok = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(listingText);
+        ok = true;
+      } catch (err) {
+        ok = false;
+      }
+    }
+    if (!ok) ok = copyWithSelection(listingText);
+    flashCopy(ok);
+  }
+
+  document.getElementById("listing-form").addEventListener("submit", function (event) {
+    event.preventDefault();
+    generateListing();
+  });
+  document.getElementById("sampleBtn").addEventListener("click", loadSample);
+  document.getElementById("copyBtn").addEventListener("click", copyResult);
+  FIELD_IDS.forEach(function (id) {
+    document.getElementById(id).addEventListener("input", function () {
+      const input = document.getElementById(id);
+      const error = document.getElementById(id + "-error");
+      if (!input.classList.contains("is-invalid")) return;
+      input.classList.remove("is-invalid");
+      input.removeAttribute("aria-invalid");
+      if (error) {
+        error.hidden = true;
+        error.textContent = "";
+      }
+      const stillInvalid = document.querySelector(".is-invalid");
+      if (!stillInvalid) {
+        const summary = document.getElementById("form-error");
+        summary.hidden = true;
+        summary.textContent = "";
+      }
+    });
+  });
 </script>
 </body>
 </html>

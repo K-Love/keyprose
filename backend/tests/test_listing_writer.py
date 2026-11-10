@@ -66,6 +66,43 @@ class TestDeterministicListing:
         result = _deterministic_listing({}, "professional", "short")
         assert isinstance(result, str)
 
+    def test_includes_address_and_skips_blank_neighborhood(self):
+        text = _deterministic_listing(
+            {
+                "address": "  123 Maple Street  ",
+                "beds": 4,
+                "baths": 3,
+                "sqft": 2400,
+                "price": 650000,
+                "neighborhood": "   ",
+                "features": [" pool ", ""],
+            },
+            "luxury",
+            "medium",
+        )
+        assert "at 123 Maple Street" in text
+        assert "Highlights include pool" in text
+        assert "desirable" not in text.lower()
+        assert "None" not in text
+
+    def test_includes_neighborhood_when_the_user_typed_one(self):
+        text = _deterministic_listing(SAMPLE_PROPERTY, "luxury", "medium")
+        assert "at 123 Maple Street, Austin, TX 78701" in text
+        assert "in the desirable South Congress area" in text
+        assert "pool" in text
+
+    def test_missing_numbers_do_not_render_as_none(self):
+        text = _deterministic_listing(
+            {"address": "1 Oak Lane", "beds": None, "baths": None, "sqft": None, "neighborhood": None},
+            "luxury",
+            "short",
+        )
+        assert "None" not in text
+        assert "3-bedroom" in text
+        assert "2-bathroom" in text
+        assert "1,800" in text
+        assert "desirable" not in text.lower()
+
 
 class TestGenerateListing:
     def test_generate_listing_demo_mode(self):
