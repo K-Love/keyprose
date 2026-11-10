@@ -32,7 +32,7 @@ _TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
                 "I wanted to reach out personally because I just listed a property that I think "
                 "you're going to love.\n\n"
                 "📍 {address}\n"
-                "🛏 {beds} Bedrooms | 🛁 {baths} Bathrooms | 📐 {sqft} Sq Ft\n"
+                "{specs_line}"
                 "💰 Listed at ${price:,}\n\n"
                 "This home features {highlight} and is located in one of Austin's most sought-after "
                 "neighborhoods. Homes like this don't stay on the market long — especially in today's "
@@ -121,7 +121,7 @@ _TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
                 "📍 {address}\n"
                 "💰 Asking: ${price:,}\n"
                 "📈 Estimated Cap Rate: {cap_rate}%\n"
-                "🏠 {beds}bd/{baths}ba | {sqft} sqft\n\n"
+                "{investor_specs}"
                 "This property offers strong rental income potential in a high-demand corridor. "
                 "Recent renovations reduce near-term capex, and the location commands premium rents.\n\n"
                 "Full pro forma and rent roll available upon request. "
@@ -173,6 +173,46 @@ _TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
 }
 
 
+def _provided(context: Dict[str, Any], key: str) -> bool:
+    if key not in context:
+        return False
+    value = context[key]
+    if value is None:
+        return False
+    if isinstance(value, str) and not value.strip():
+        return False
+    return True
+
+
+def _specs_line(context: Dict[str, Any]) -> str:
+    """Bedroom, bath, and size line built only from values the caller supplied."""
+    parts = []
+    if _provided(context, "beds"):
+        parts.append(f"🛏 {context['beds']} Bedrooms")
+    if _provided(context, "baths"):
+        parts.append(f"🛁 {context['baths']} Bathrooms")
+    if _provided(context, "sqft"):
+        parts.append(f"📐 {context['sqft']} Sq Ft")
+    if not parts:
+        return ""
+    return " | ".join(parts) + "\n"
+
+
+def _investor_specs(context: Dict[str, Any]) -> str:
+    parts = []
+    if _provided(context, "beds") and _provided(context, "baths"):
+        parts.append(f"{context['beds']}bd/{context['baths']}ba")
+    elif _provided(context, "beds"):
+        parts.append(f"{context['beds']}bd")
+    elif _provided(context, "baths"):
+        parts.append(f"{context['baths']}ba")
+    if _provided(context, "sqft"):
+        parts.append(f"{context['sqft']} sqft")
+    if not parts:
+        return ""
+    return "🏠 " + " | ".join(parts) + "\n\n"
+
+
 def _fill_template(template: str, context: Dict[str, Any]) -> str:
     """Fill template placeholders with context values."""
     defaults = {
@@ -180,9 +220,6 @@ def _fill_template(template: str, context: Dict[str, Any]) -> str:
         "agent_name": "Your Agent",
         "agent_phone": "(512) 555-0100",
         "address": "the property",
-        "beds": 3,
-        "baths": 2,
-        "sqft": "1,800",
         "price": 550000,
         "highlight": "modern finishes and a great location",
         "market_condition": "seller's market",
@@ -195,12 +232,33 @@ def _fill_template(template: str, context: Dict[str, Any]) -> str:
         "inventory_level": "low (2.1 months supply)",
     }
     merged = {**defaults, **context}
+    merged["specs_line"] = _specs_line(context)
+    merged["investor_specs"] = _investor_specs(context)
 
     try:
         return template.format(**merged)
     except (KeyError, ValueError):
         # If format fails, return template as-is
         return template
+
+
+def email_prompt(
+    recipient_type: str,
+    context: Dict[str, Any],
+    num_emails: int,
+    step: int,
+    delay: int,
+) -> str:
+    """Prompt sent to the model. Uses only the caller's context — no sample property."""
+    return (
+        f"Write email #{step} in a {num_emails}-email sequence for a {recipient_type} "
+        f"in real estate. Context: {context}. "
+        f"This is sent {delay} days after the first contact. "
+        "Include: subject line (prefix with 'Subject: '), then the email body. "
+        "Keep it under 200 words. Professional but warm tone. Clear CTA. "
+        "Use only the property details in the context. "
+        "Do not invent bedrooms, bathrooms, square footage, or prices."
+    )
 
 
 def generate_emails(
@@ -239,13 +297,7 @@ def generate_emails(
     for i in range(min(num_emails, 5)):
         step = i + 1
         delay = [0, 3, 7, 14, 21][i]
-        prompt = (
-            f"Write email #{step} in a {num_emails}-email sequence for a {recipient_type} "
-            f"in real estate. Context: {context}. "
-            f"This is sent {delay} days after the first contact. "
-            "Include: subject line (prefix with 'Subject: '), then the email body. "
-            "Keep it under 200 words. Professional but warm tone. Clear CTA."
-        )
+        prompt = email_prompt(recipient_type, context, num_emails, step, delay)
         raw = generate_text(prompt, max_tokens=350)
         lines = raw.strip().split("\n")
         subject = lines[0].replace("Subject:", "").strip() if lines else f"Follow-up #{step}"

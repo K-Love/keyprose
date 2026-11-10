@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 
 import handler, { resetLimitsForTests, useMemoryLimitsForTests } from "./functions/api.mjs";
+import { emailPlans, listingPrompt } from "./functions/ai_provider.mjs";
 
 useMemoryLimitsForTests();
 delete process.env.OPENAI_API_KEY;
@@ -335,6 +337,104 @@ test("an oversized body is rejected before a model call", async () => {
     assert.equal(called, false);
     assert.equal(JSON.stringify(payload).includes(SECRET), false);
   });
+});
+
+test("listing prompt includes neighborhood only when provided", async () => {
+  const details = {
+    address: "123 Maple Street",
+    beds: 2,
+    baths: 1,
+    sqft: 900,
+    price: 300000,
+    features: ["garden"],
+  };
+  const absent = listingPrompt(details, "professional", "medium");
+  assert.doesNotMatch(absent, /neighborhood/i);
+  assert.equal(listingPrompt({ ...details, neighborhood: "" }, "professional", "medium"), absent);
+  assert.equal(listingPrompt({ ...details, neighborhood: "   " }, "professional", "medium"), absent);
+  assert.equal(listingPrompt({ ...details, neighborhood: null }, "professional", "medium"), absent);
+
+  const present = listingPrompt({ ...details, neighborhood: " South Congress " }, "professional", "medium");
+  assert.match(present, /at 123 Maple Street in the South Congress neighborhood\./);
+  assert.doesNotMatch(present, /in the {2}neighborhood/);
+
+  await withEnv({ OPENAI_API_KEY: SECRET, AI_BASE_URL: "https://api.openai.com/v1" }, async () => {
+    const capture = {};
+    mockChat("A listing about the neighborhood block.", capture);
+    const response = await call("/api/listing-writer", {
+      property_details: { ...details, neighborhood: "South Congress" },
+      tone: "professional",
+      length: "short",
+    });
+    const payload = await response.json();
+    assert.equal(payload.ai_mode, "live");
+    assert.equal(payload.listing_text, "A listing about the neighborhood block.");
+    assert.match(capture.body.messages[1].content, /in the South Congress neighborhood/);
+
+    await call("/api/listing-writer", {
+      property_details: { ...details, neighborhood: " " },
+      tone: "professional",
+      length: "short",
+    });
+    assert.doesNotMatch(capture.body.messages[1].content, /neighborhood/i);
+    assert.doesNotMatch(capture.body.messages[1].content, /South Congress/);
+  });
+});
+
+test("email prompt has no sample 4bd/3ba/2,400 property", async () => {
+  const context = {
+    first_name: "Alex",
+    agent_name: "Sam Lee",
+    address: "9 Oak Lane",
+    price: 410000,
+    highlight: "garden",
+  };
+  const prompt = emailPlans("buyer", context, 1)[0].prompt;
+  assert.match(prompt, /9 Oak Lane/);
+  assert.match(prompt, /garden/);
+  assert.doesNotMatch(prompt, /4bd\/3ba/i);
+  assert.doesNotMatch(prompt, /2,400/);
+  assert.doesNotMatch(prompt, /\b2400\b/);
+  assert.doesNotMatch(prompt, /4-bedroom/i);
+  assert.match(prompt, /Do not invent bedrooms/);
+
+  const actual = emailPlans("buyer", { address: "9 Oak Lane", beds: 2, baths: 1, sqft: 900 }, 1)[0].prompt;
+  assert.match(actual, /"sqft":900/);
+  assert.doesNotMatch(actual, /4bd\/3ba/);
+  assert.doesNotMatch(actual, /2,400/);
+  assert.doesNotMatch(actual, /\b2400\b/);
+
+  const page = readFileSync(new URL("../frontend/tools/email.html", import.meta.url), "utf8");
+  assert.doesNotMatch(page, /beds\s*:\s*4\b/);
+  assert.doesNotMatch(page, /baths\s*:\s*3\b/);
+  assert.doesNotMatch(page, /2,400/);
+  assert.doesNotMatch(page, /4bd\/3ba/);
+
+  await withEnv({ OPENAI_API_KEY: SECRET, AI_BASE_URL: "https://api.openai.com/v1" }, async () => {
+    const capture = {};
+    mockChat("Subject: Hello\n\nHi Alex.", capture);
+    const response = await call("/api/email", {
+      recipient_type: "buyer",
+      num_emails: 1,
+      context,
+    });
+    const payload = await response.json();
+    assert.equal(payload.ai_mode, "live");
+    const sent = capture.body.messages[0].content;
+    assert.match(sent, /9 Oak Lane/);
+    assert.doesNotMatch(sent, /4bd\/3ba/i);
+    assert.doesNotMatch(sent, /2,400/);
+    assert.doesNotMatch(sent, /\b2400\b/);
+  });
+
+  const demo = await (await call("/api/email", {
+    recipient_type: "buyer",
+    num_emails: 1,
+    context,
+  })).json();
+  assert.equal(demo.ai_mode, "demo");
+  assert.match(demo.emails[0].body, /9 Oak Lane/);
+  assert.doesNotMatch(demo.emails[0].body, /2,400|1,800|4 bedrooms|3 bathrooms/);
 });
 
 test("health reports live mode and the provider host only", async () => {

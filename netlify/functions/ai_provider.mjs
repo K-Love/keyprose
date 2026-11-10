@@ -207,6 +207,11 @@ function dollars0(value) {
   return number.toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
 
+function neighborhoodText(value) {
+  if (typeof value !== "string") return "";
+  return value.trim();
+}
+
 export function listingPrompt(details, tone, length) {
   const targetWords = LENGTH_TARGETS[length] ?? 200;
   const features = Array.isArray(details.features) ? details.features.filter(Boolean) : [];
@@ -215,12 +220,14 @@ export function listingPrompt(details, tone, length) {
   const baths = details.baths ?? 2;
   const sqft = Number.isFinite(Number(details.sqft)) ? Number(details.sqft) : 1800;
   const address = details.address || "a prime location";
+  const neighborhood = neighborhoodText(details.neighborhood);
+  const place = neighborhood ? `${address} in the ${neighborhood} neighborhood` : address;
   const year = details.year_built ? `, built in ${details.year_built}` : "";
   const price = Number.isFinite(Number(details.price)) ? Number(details.price) : 0;
   return (
     `Write a ${tone} real estate listing description for a `
     + `${beds}-bedroom, ${baths}-bathroom home `
-    + `at ${address}. `
+    + `at ${place}. `
     + `The home is ${commas(sqft)} sq ft${year}. `
     + `Key features: ${featuresStr}. `
     + `Price: $${commas(price)}. `
@@ -289,7 +296,9 @@ export function emailPlans(recipientType, context, numEmails) {
       + `in real estate. Context: ${JSON.stringify(context)}. `
       + `This is sent ${delay} days after the first contact. `
       + "Include: subject line (prefix with 'Subject: '), then the email body. "
-      + "Keep it under 200 words. Professional but warm tone. Clear CTA."
+      + "Keep it under 200 words. Professional but warm tone. Clear CTA. "
+      + "Use only the property details in the context. "
+      + "Do not invent bedrooms, bathrooms, square footage, or prices."
     );
     return { step, delay, prompt, maxTokens: 350 };
   });
