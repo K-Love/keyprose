@@ -1,203 +1,78 @@
-# Buyer Onboarding Guide
+# Buyer onboarding
 
-Welcome! This guide walks you through everything you need to launch **KeyProse** after purchase.
+KeyProse is the listing-agent drafting app in this repository: five tools, a static frontend, a Netlify function, and a Python server that can run the same routes. You host it and you bring the AI key. Nothing here is an account system, a billing system, or a book of business.
 
----
+Pages to read with this one: [README.md](README.md), [../README.md](../README.md), [../release/INSTALLATION.md](../release/INSTALLATION.md), [../release/TRANSFER_INSTRUCTIONS.md](../release/TRANSFER_INSTRUCTIONS.md).
 
-## Step 1: Get the Code
+## 1. Take the code
 
-```bash
-# Clone from GitHub (repo transferred to you)
-git clone https://github.com/YOUR_USERNAME/keyprose.git
-cd keyprose
-```
+The repository is [github.com/K-Love/keyprose](https://github.com/K-Love/keyprose). After the GitHub transfer, clone your copy. `bash scripts/build_release.sh` builds `release/keyprose-release.zip` if you want a snapshot without `.git`. See the transfer checklist for what that zip leaves out.
 
----
+## 2. Run it locally
 
-## Step 2: Run Locally (5 minutes)
+Python 3.11 or newer.
 
 ```bash
-# Install Python dependencies
-pip install -r backend/requirements.txt
-
-# Start the server
-python backend/server.py
-
-# Visit: http://localhost:8000
-# API docs: http://localhost:8000/docs
+python3 -m pip install -r backend/requirements.txt
+python3 backend/server.py
 ```
 
-✅ **Works immediately in demo mode** — no API key needed.
+Open `http://localhost:8000`. Interactive API docs on this server are `http://localhost:8000/docs`. `bash scripts/run_demo.sh` is the same start.
 
----
+With `OPENAI_API_KEY` unset, the tools return sample copy and `/api/health` reports `ai_mode` of `demo`.
 
-## Step 3: Enable Live AI
+`bash scripts/seed_db.sh` writes sample rows to `keyprose.db`. The server does not read that file. An existing `listing_pilot.db` is kept when `keyprose.db` is not there yet. Set `DB_FILE` to pick a path.
 
-1. Get an OpenAI API key at [platform.openai.com](https://platform.openai.com)
-2. Set the environment variable:
-   ```bash
-   export OPENAI_API_KEY=sk-your-key-here
-   ```
-3. Restart the server — it auto-detects the key.
+## 3. Add your AI key
 
-For Abacus.AI RouteLLM or another OpenAI-compatible host, also set `AI_BASE_URL` and `AI_MODEL`. The Netlify site reads the same variables under **Site configuration → Environment variables**. Exact values and doc links are in the [README](README.md#live-ai-providers).
+Set `OPENAI_API_KEY` to your provider's key. Set `AI_BASE_URL` to that provider's Chat Completions root, and `AI_MODEL` to the model id. The variable is named `OPENAI_API_KEY` for every host.
 
-**Default model:** `gpt-4o-mini` (override with `OPENAI_MODEL` or `AI_MODEL`)
-**Cost estimate:** ~$0.001–0.005 per listing generation on that default model
+Restart the Python process. `GET /api/health` then reports `ai_mode` of `live` and `provider_host` as a hostname. A failed or over-long call still returns sample copy and a `notice`.
 
----
+Every variable the code reads is listed in [README.md](README.md#environment-variables). Do not paste key values into files in this repo.
 
-## Step 4: Deploy to Production
+## 4. Deploy on Netlify
 
-### Option A: Railway (Easiest — ~5 min)
+This is the default host.
 
-1. Create account at [railway.app](https://railway.app)
-2. Connect your GitHub repo
-3. Railway auto-detects Python and deploys
-4. Add env var: `OPENAI_API_KEY`
-5. Your app is live at `https://your-app.railway.app`
+1. Transfer the existing site, or create a new one and connect the repo. The existing site name is `listingp`. Leave that name as it is if you transfer the site.
+2. Publish directory: `frontend`, from `netlify.toml`. No build command. The root `package.json` supplies `@netlify/blobs` for the live-generation counters.
+3. Set the environment variables in the Netlify site settings for each deploy context you use.
+4. Add `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Point DNS using the records Netlify shows. Redirect `www.keyprose.com` to `https://keyprose.com`. Serve the same site on the `.app` names.
 
-**Cost:** ~$5/month for hobby tier
+`npx netlify login` and `npx netlify deploy --prod --build` deploy a linked site from a checkout.
 
-### Option B: Render
+## 5. Registrar
 
-1. Create account at [render.com](https://render.com)
-2. New → Web Service → Connect GitHub repo
-3. **Build Command:** `pip install -r backend/requirements.txt`
-4. **Start Command:** `python backend/server.py`
-5. Add env var: `OPENAI_API_KEY`
+Both domains are at Porkbun. Keep them there and change DNS if you only need a new host. To move a domain, unlock it, take the authorization (EPP) code, and submit the transfer at the new registrar. Repeat for the other domain. A domain registered or transferred in the last 60 days cannot be transferred again until that ICANN window ends. A registrant-contact change can start the same lock. The registrar and the website host are separate. DNS decides the host.
 
-**Cost:** Free tier available (spins down after inactivity)
+## 6. Another host
 
-### Option C: Fly.io
+Netlify-specific pieces are `netlify/functions/api.mjs` (handler plus `/api/*`), `netlify/functions/ai_provider.mjs`, `netlify/functions/ai_limits.mjs` (Netlify Blobs), `netlify.toml` (publish directory, function timeout, redirects), and `frontend/_redirects`. This repo does not set custom response headers.
+
+A VPS runs the Python app that is already here: `python3 backend/server.py` or the `Dockerfile`. That process serves the pages and the API. It does not use the Netlify function or Blobs. You terminate TLS yourself.
+
+Vercel or Cloudflare needs a port of `api.mjs` and `ai_provider.mjs`. The Blobs helper does not run there. Cloudflare Pages can publish `frontend/` and understands `frontend/_redirects`. Details, including the files to touch, are in [README.md](README.md#hosting-elsewhere).
+
+## 7. Tests
 
 ```bash
-# Install flyctl
-curl -L https://fly.io/install.sh | sh
-
-# Deploy
-fly launch
-fly secrets set OPENAI_API_KEY=sk-...
-fly deploy
+python3 -m pytest backend/tests/
+npm ci
+node --test netlify/api.test.mjs
 ```
 
-**Cost:** ~$3-7/month
+Both pass without a provider key.
 
-### Option D: VPS (DigitalOcean, Linode, etc.)
+## 8. Before you call it yours
 
-```bash
-# On your server
-git clone https://github.com/YOUR_USERNAME/keyprose.git
-cd keyprose
-pip install -r backend/requirements.txt
+Work through [../release/TRANSFER_INSTRUCTIONS.md](../release/TRANSFER_INSTRUCTIONS.md): GitHub transfer, Netlify transfer or a new site, Porkbun domains, key rotation, and the Privacy and Terms pages. Those pages name Kevin Love and Backstage Interactive. They are still the published legal text. Update them. Do not change them in the product until you mean to.
 
-# Run with systemd or screen
-export OPENAI_API_KEY=sk-...
-python backend/server.py
+## Limits to plan around
 
-# Or use gunicorn for production
-pip install gunicorn
-gunicorn backend.server:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
+- No sign-in, no payments, and no database-backed user data.
+- The hosted API accepts a partial JSON object and fills gaps with defaults. The Python API rejects a missing required field. Neither runtime accepts truncated JSON.
+- Sample copy adds generic lines (extra property claims, Austin social wording, stand-in email figures, a fixed CMA market sentence). Read a draft before a client sees it.
+- The tools do not publish, send, or appraise.
 
----
-
-## Step 5: Customize Your Brand
-
-### Update the Logo
-Replace `frontend/assets/logo.svg` with your logo.
-
-### Update Colors
-Edit the CSS variables in each HTML file:
-```css
-:root {
-  --primary: #1e50a0;  /* Change to your brand color */
-  --accent: #f59e0b;   /* Change to your accent color */
-}
-```
-
-### Update the App Name
-Search and replace "KeyProse" across the frontend HTML files. The wordmark is `frontend/assets/logo.svg` and the favicon is `frontend/assets/favicon.svg`.
-
-### Custom Domain
-Point your domain to your deployment and update CORS settings in `backend/server.py`. `keyprose.com` is the planned primary domain and `keyprose.app` is the alternate; neither is registered or set in this repo:
-```python
-allow_origins=["https://yourdomain.com"]
-```
-
----
-
-## Step 6: Add Authentication (Optional)
-
-The API is open by default. To add simple API key auth:
-
-```python
-# In backend/server.py, add:
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import Security
-
-security = HTTPBearer()
-API_KEY = os.getenv("API_KEY", "demo-key")
-
-async def verify_token(credentials: HTTPAuthorizationCredentials = Security(security)):
-    if credentials.credentials != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API key")
-    return credentials.credentials
-```
-
----
-
-## Step 7: Connect a Database (Optional)
-
-The demo uses SQLite seed data. For production, add PostgreSQL:
-
-```bash
-pip install sqlalchemy asyncpg
-```
-
-```python
-# Add to backend/server.py
-from sqlalchemy.ext.asyncio import create_async_engine
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./listing_pilot.db")
-```
-
----
-
-## Recommended Tech Stack for Scaling
-
-| Layer | Recommendation |
-|-------|---------------|
-| Hosting | Railway or Fly.io |
-| Database | PostgreSQL (Supabase free tier) |
-| Auth | Clerk.dev or Auth0 |
-| Payments | Stripe (add subscription billing) |
-| Email sending | Resend or SendGrid |
-| Monitoring | Sentry (free tier) |
-
----
-
-## Support Resources
-
-- **API Docs:** `http://your-app/docs`
-- **Test Suite:** `pytest backend/tests/ -v`
-- **Demo Script:** See [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
-- **Installation:** See [../release/INSTALLATION.md](../release/INSTALLATION.md)
-
----
-
-## Common Issues
-
-**Port already in use:**
-```bash
-PORT=8001 python backend/server.py
-```
-
-**Module not found errors:**
-```bash
-cd keyprose
-pip install -r backend/requirements.txt
-python backend/server.py  # Run from repo root
-```
-
-**CORS errors in browser:**
-The server allows all origins by default. If you restrict origins, add your frontend URL to `allow_origins` in `server.py`.
+`docs/DEMO_SCRIPT.md` is a talk track from an earlier pass. `docs/API_REFERENCE.md` includes an `API_KEY` example this server does not enforce. Use this onboarding guide and [README.md](README.md) for what the code does.

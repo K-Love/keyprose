@@ -1,5 +1,8 @@
 -- KeyProse — Demo Seed Data
--- Run with: sqlite3 listing_pilot.db < backend/data/seed_demo_data.sql
+-- The running app does not open this file. It is sample rows only.
+-- Run with: sqlite3 keyprose.db < backend/data/seed_demo_data.sql
+-- Older checkouts used listing_pilot.db. scripts/seed_db.sh still updates
+-- that file when it is present and keyprose.db is not.
 
 CREATE TABLE IF NOT EXISTS properties (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,

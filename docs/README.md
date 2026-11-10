@@ -1,226 +1,181 @@
 # KeyProse
 
-> **KeyProse: the AI back office for listing agents.** 5 AI-powered tools for real estate professionals. Generate MLS listings, CMA reports, social posts, email campaigns, and outreach sequences — in seconds, not hours.
+KeyProse drafts listing copy, a comparable-sale summary, social posts, email sequences, and an outreach preview. It is a working software asset. The buyer supplies the AI key and the hosting. The repo does not include accounts, billing, a customer database, traffic, revenue, or a user list.
 
-The Git repository is named `keyprose`. API routes and environment variables are unchanged.
+The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` serve the same site. Privacy: [https://keyprose.com/privacy](https://keyprose.com/privacy). Terms: [https://keyprose.com/terms](https://keyprose.com/terms).
 
-The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` serve the same site. Privacy Policy: [https://keyprose.com/privacy](https://keyprose.com/privacy). Terms of Use: [https://keyprose.com/terms](https://keyprose.com/terms). Those pages, the homepage, the tools, and the API docs set a canonical URL on `keyprose.com`. CORS in `backend/server.py` is still open (`allow_origins=["*"]`) for the self-hosted demo.
+Source today: [https://github.com/K-Love/keyprose](https://github.com/K-Love/keyprose).
 
-[![CI](https://github.com/YOUR_USERNAME/keyprose/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/keyprose/actions)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green.svg)](https://fastapi.tiangolo.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../release/LICENSE.txt)
+## Tools
 
----
+| Tool | Page | Endpoint | What it does |
+|------|------|----------|----------------|
+| Listing Writer | `/tools/listing` | `POST /api/listing-writer` | MLS description from `property_details`, `tone` (`luxury`, `family`, `investment`, `casual`, `professional`), and `length` (`short`, `medium`, `long`). |
+| CMA Assistant | `/tools/cma` | `POST /api/cma` | Value, range, price per square foot, and a written summary from the comps you submit, plus a PDF. The PDF says it is not an appraisal. |
+| Social Generator | `/tools/social` | `POST /api/social` | Draft posts for `instagram`, `facebook`, `twitter`, `linkedin`, or `all`. Nothing is published. |
+| Email Campaigns | `/tools/email` | `POST /api/email` | Draft sequence for `buyer`, `seller`, `investor`, `past_client`, or `cold_lead`. Nothing is sent. |
+| Outreach Engine | `/tools/outreach` | `POST /api/outreach` | Preview for `new_listing`, `price_drop`, `open_house`, `follow_up`, or `custom`. Stock templates do not call the model. `custom` can. Nothing is sent. |
 
-## 🚀 Quick Start (2 minutes)
+`GET /api/health` returns `status`, `version`, `ai_mode`, and `provider_host`. The Netlify function also returns `host: "netlify"`. Tool JSON adds `ai_mode` and, when sample copy was used, `notice`.
+
+## Architecture
+
+```
+frontend/                         static pages (no build)
+  index.html, tools/*.html
+  api-docs.html                   public /docs on Netlify
+  _redirects                      same paths as netlify.toml
+netlify/functions/api.mjs         hosted /api/* handler
+netlify/functions/ai_provider.mjs prompts and Chat Completions
+netlify/functions/ai_limits.mjs   Netlify Blobs counters
+backend/server.py                 FastAPI: pages + /api/*
+backend/demo_http.py              route dispatch for the Python app
+backend/ai/*.py                   the five tools
+backend/services/ai_client.py     Chat Completions for Python
+backend/services/pdf_generator.py CMA PDF files
+backend/models/schemas.py         Pydantic bodies for the Python app
+```
+
+The browser calls `/api/*` on the same origin. On Netlify, that request hits `api.mjs`. Locally and in Docker, `server.py` handles it in Python. The prompts are duplicated on purpose so the hosted function does not need Python.
+
+Python CMA returns `cma_pdf_url` as `/api/cma/pdf/{filename}` and stores the file under `PDF_OUTPUT_DIR`. The hosted function returns a `data:application/pdf;base64,...` URL in the JSON and does not keep the file.
+
+Python CORS allows every origin (`allow_origins=["*"]` in `backend/server.py`). The Netlify function does not send an `Access-Control-Allow-Origin` header. The pages on the same host do not need one.
+
+## Environment variables
+
+Name and purpose only. Do not put secret values in the repo, the docs, or a zip.
+
+| Name | Where it is read | Purpose |
+|------|------------------|---------|
+| `OPENAI_API_KEY` | `backend/services/ai_client.py`, `netlify/functions/ai_provider.mjs` | Key sent as `Authorization: Bearer`. Unset or blank: demo mode, no outbound model call. |
+| `AI_BASE_URL` | same | API root. Unset: OpenAI's public root (`https://api.openai.com/v1`). The client posts to `{root}/chat/completions`, unless the root already ends with that path. |
+| `AI_MODEL` | same | Model id. Takes priority over `OPENAI_MODEL`. |
+| `OPENAI_MODEL` | same | Model id when `AI_MODEL` is unset. Both unset: `gpt-4o-mini`. |
+| `AI_MAX_INPUT_CHARS` | same | Max characters of prompt plus system text. Over the cap: sample copy. Unset: `8000`. `0` disables. |
+| `AI_MAX_TOKENS` | same | Cap on `max_tokens`. Unset: `800`. |
+| `AI_MAX_BODY_CHARS` | `netlify/functions/ai_provider.mjs` only | Max request body. Over the cap: HTTP 413. Unset: `24000`. `0` disables. |
+| `AI_RATE_LIMIT_PER_HOUR` | hosted function only | Live calls per IP per hour. Unset: `10`. `0` disables. Counts go to the Blobs store `keyprose-ai-limits`, or to process memory if Blobs cannot be opened. |
+| `AI_DAILY_CAP` | hosted function only | Live calls per UTC day for the site. Unset: `200`. `0` disables. |
+| `PORT` | `backend/server.py`, `scripts/run_demo.sh` | Python listen port. Unset: `8000`. |
+| `PDF_OUTPUT_DIR` | `backend/services/pdf_generator.py`, `backend/demo_http.py` | CMA PDF directory for the Python server. Unset: the system temp directory. |
+| `DB_FILE` | `scripts/seed_db.sh` only | SQLite file for the sample seed. Unset: `keyprose.db`. If that file is missing and `listing_pilot.db` exists, the script updates the old file. The application does not read it. |
+
+There is no `API_KEY` variable and no `DATABASE_URL` in the running code.
+
+## Plug in a provider key
+
+1. Create a key at the Chat Completions host you want to use.
+2. Set `OPENAI_API_KEY` to that key. The variable name stays `OPENAI_API_KEY` for every host.
+3. Set `AI_BASE_URL` to that host's API root, and `AI_MODEL` to a model id the host lists.
+4. Restart the Python process, or redeploy Netlify after saving the variables for the deploy contexts you use.
+
+Confirm with `GET /api/health`. `ai_mode` is `live` when the key is set. `provider_host` is the hostname only.
+
+No key, a failed call, an over-long prompt, or a hosted rate limit: the tool returns the built-in sample copy and says so in `notice` when it can. `ai_mode` on that tool response stays `demo` unless the model text was used. Social and email can mix the two. A partial mix uses the notice `Part of this result is sample copy because a model call failed.`
+
+The privacy page says that on November 7, 2026 the public site sent live drafts to Abacus RouteLLM at `routellm.abacus.ai`. That is a hosting choice, stored in Netlify's environment, not a key in this repo.
+
+## Local development
+
+Python 3.11+ and pip. Node.js 18+ for the function tests.
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/keyprose.git
-cd keyprose
-
-# 2. Install dependencies
-pip install -r backend/requirements.txt
-
-# 3. Start the server
-python backend/server.py
-
-# 4. Open your browser
-open http://localhost:8000
-# API docs: http://localhost:8000/docs
+python3 -m pip install -r backend/requirements.txt
+python3 backend/server.py
 ```
 
-**That's it.** Works fully offline in demo mode — no API key needed.
+- App: `http://localhost:8000`
+- Swagger: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
 
----
+`bash scripts/run_demo.sh` does the same start, and prints whether `OPENAI_API_KEY` is set.
 
-## 🔑 Enable Live AI (Optional)
+Docker (Python server and `frontend/` only):
 
 ```bash
-export OPENAI_API_KEY=sk-your-key-here
-python backend/server.py
-```
-
-The server auto-detects the key and switches from demo mode to live generation. `AI_BASE_URL` points at any OpenAI-compatible Chat Completions API (default `https://api.openai.com/v1`). See [Live AI providers](#live-ai-providers) for Abacus.AI RouteLLM and OpenAI.
-
----
-
-## 🛠 Tools Included
-
-| Tool | Endpoint | Description |
-|------|----------|-------------|
-| **Listing Writer** | `POST /api/listing-writer` | MLS descriptions in 5 tones × 3 lengths |
-| **CMA Assistant** | `POST /api/cma` | Market analysis + PDF report |
-| **Social Generator** | `POST /api/social` | Instagram, Facebook, Twitter, LinkedIn posts |
-| **Email Campaigns** | `POST /api/email` | Buyer/seller/investor drip sequences |
-| **Outreach Engine** | `POST /api/outreach` | Multi-touch lead nurturing sequences |
-
----
-
-## 📁 Project Structure
-
-```
-keyprose/
-├── backend/
-│   ├── server.py              # FastAPI app (start here)
-│   ├── requirements.txt
-│   ├── ai/                    # AI modules (pluggable OpenAI or demo)
-│   │   ├── listing_writer.py
-│   │   ├── cma_assistant.py
-│   │   ├── social_generator.py
-│   │   ├── email_generator.py
-│   │   └── outreach_engine.py
-│   ├── models/schemas.py      # Pydantic request/response models
-│   ├── services/
-│   │   ├── ai_client.py       # OpenAI wrapper with demo fallback
-│   │   └── pdf_generator.py   # CMA PDF generation
-│   ├── data/seed_demo_data.sql
-│   └── tests/                 # Pytest test suite
-├── frontend/
-│   ├── index.html             # Landing page
-│   └── tools/                 # Tool UIs (listing, cma, social)
-├── docs/                      # Documentation
-├── demo_data/                 # Sample data files
-├── scripts/                   # Helper scripts
-└── release/                   # Buyer handoff materials
-```
-
----
-
-## 🐳 Docker Deployment
-
-```dockerfile
-# Dockerfile (create in root)
-FROM python:3.11-slim
-WORKDIR /app
-COPY backend/requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["python", "backend/server.py"]
-```
-
-```bash
-# Build and run
 docker build -t keyprose .
-docker run -p 8000:8000 -e OPENAI_API_KEY=sk-... keyprose
+docker run -p 8000:8000 keyprose
 ```
 
----
-
-## ☁️ Cloud Deployment
-
-### Railway (Recommended — 5 minutes)
-```bash
-npm install -g @railway/cli
-railway login
-railway init
-railway up
-```
-
-### Render
-1. Connect your GitHub repo at render.com
-2. Set **Build Command**: `pip install -r backend/requirements.txt`
-3. Set **Start Command**: `python backend/server.py`
-4. Add env var: `OPENAI_API_KEY`
-
-### Fly.io
-```bash
-fly launch
-fly secrets set OPENAI_API_KEY=sk-...
-fly deploy
-```
-
-### Netlify (static site + `/api`)
-`netlify.toml` publishes `frontend/`. That is what removes the production 404, which happens when Netlify publishes the repository root and there is no root `index.html`.
-
-Netlify functions do not run Python. `netlify/functions/api.mjs` answers `/api/*` with the same five tools. When `OPENAI_API_KEY` is set in **Site configuration → Environment variables**, generations call the Chat Completions URL from `AI_BASE_URL`. When the key is missing, the call fails, the input is too long, or a rate limit is hit, the function returns the built-in sample copy and says so. Do not put the key in the repo.
-
-Stock outreach templates (`new_listing`, `price_drop`, `open_house`, `follow_up`) stay on the built-in sequence, matching `backend/ai/outreach_engine.py`. The `custom` template is the one that calls the model.
-
----
-
-## 🧪 Running Tests
+## Tests
 
 ```bash
-cd keyprose
-pip install -r backend/requirements.txt
-pytest backend/tests/ -v
+python3 -m pytest backend/tests/
+npm ci
+node --test netlify/api.test.mjs
 ```
 
-All tests run in offline/demo mode — no API key required.
+No provider key is required. CI is `.github/workflows/ci.yml`.
 
----
+## Deploy on Netlify
 
-## ⚙️ Configuration
+Default host for the public site.
 
-Set these in the shell for `python backend/server.py`, or in Netlify under **Site configuration → Environment variables** (all scopes you deploy). Never commit the key.
+1. Transfer the existing site, or create one. The current site name is `listingp`. Do not rename `listingp` as part of a transfer. The name is not stored in this repo.
+2. Connect the GitHub repo. Publish directory is `frontend` (`netlify.toml`). Leave the build command empty. Netlify still installs `package.json` so `@netlify/blobs` is available to the function.
+3. Set the variables in **Site configuration → Environment variables**. Include `OPENAI_API_KEY` only if you want live copy.
+4. Deploy. `npx netlify deploy --prod --build` from a logged-in CLI does the same against a linked site.
+5. Domains. Add `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Use the DNS targets Netlify displays. Redirect `www.keyprose.com` to `https://keyprose.com`. Serve the same site on `keyprose.app` and `www.keyprose.app`. HTTPS follows once DNS verifies.
 
-| Environment Variable | Default | Description |
-|---------------------|---------|-------------|
-| `OPENAI_API_KEY` | *(none)* | API key for live generation. The name stays `OPENAI_API_KEY` for Abacus too; only the value changes. |
-| `AI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API root. The client calls `{AI_BASE_URL}/chat/completions`. |
-| `AI_MODEL` | *(falls through)* | Model id. Wins over `OPENAI_MODEL` when both are set. |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Model id used when `AI_MODEL` is unset. |
-| `AI_RATE_LIMIT_PER_HOUR` | `10` | Hosted site only. Live generations per IP per hour. `0` disables this cap. |
-| `AI_DAILY_CAP` | `200` | Hosted site only. Live generations per UTC day, shared via Netlify Blobs. `0` disables this cap. |
-| `AI_MAX_INPUT_CHARS` | `8000` | Largest prompt sent to the model. Over the cap, the response is sample copy. `0` disables. |
-| `AI_MAX_TOKENS` | `800` | Upper bound on `max_tokens` sent to the provider. |
-| `AI_MAX_BODY_CHARS` | `24000` | Hosted site only. Larger request bodies are rejected. `0` disables. |
-| `PORT` | `8000` | Python server port |
-| `PDF_OUTPUT_DIR` | `/tmp` | CMA PDF output directory for the Python server |
+`[functions.api] timeout` is 26 seconds, which is the synchronous function maximum this file is written for. The Python client uses a 30 second HTTP timeout and is not part of the Netlify deploy.
 
-`GET /api/health` returns `ai_mode` of `live` or `demo` and `provider_host` (hostname only). It never returns the key. Tool responses include `ai_mode` for that result (`live` only when the model produced it) and `notice` when sample copy was used instead.
+Redirects in `netlify.toml` and `frontend/_redirects`:
 
-## Live AI providers
+| From | To |
+|------|----|
+| `/docs` | `/api-docs.html` |
+| `/tools/listing` | `/tools/listing.html` |
+| `/tools/cma` | `/tools/cma.html` |
+| `/tools/social` | `/tools/social.html` |
+| `/tools/email` | `/tools/email.html` |
+| `/tools/outreach` | `/tools/outreach.html` |
+| `/privacy` and `/privacy/` | `/privacy.html` |
+| `/terms` and `/terms/` | `/terms.html` |
 
-Abacus.AI RouteLLM **is** OpenAI-compatible for this app. The Chat Completions endpoint is documented as a drop-in for the OpenAI SDK: [OpenAI Chat Completions API](https://abacus.ai/help/developer-platform/route-llm/chat-completions/) and [RouteLLM API reference](https://abacus.ai/help/developer-platform/route-llm/).
+`netlify.toml` does not define response headers. There is no `_headers` file. Add headers on the host you choose if you want them.
 
-**Abacus self-serve** (Site configuration → Environment variables):
+## Moving to another registrar
 
-| Variable | Value |
-|----------|--------|
-| `OPENAI_API_KEY` | RouteLLM API key from the Abacus.AI platform |
-| `AI_BASE_URL` | `https://routellm.abacus.ai/v1` |
-| `AI_MODEL` | `route-llm` |
+`keyprose.com` and `keyprose.app` are registered at Porkbun. You can leave both there and point DNS at any host.
 
-`route-llm` is the documented router and the default model id on that endpoint. The same docs list explicit model ids (`gpt-4o-mini`, `gpt-5.4`, `claude-sonnet-4-6`, and others). Those tables change, and the Chat Completions page says a human-readable name can differ from the API id (their example is `flux-2-pro` vs `flux2_pro`). Confirm an explicit id with `GET https://routellm.abacus.ai/v1/models` before setting `AI_MODEL` to anything other than `route-llm`.
+To transfer a domain to another registrar: unlock it at Porkbun, copy the authorization (EPP) code, and start the transfer with the new registrar. Do that once per domain. ICANN lets a registrar refuse a transfer during the first 60 days after registration or after an earlier transfer. A registrant-contact change can start that same 60-day lock. DNS can stay at the old registrar, move with the domain, or move to the host. The website host is whichever server the DNS records name.
 
-Enterprise Platform uses a workspace host instead of the self-serve host: `https://<workspace>.abacus.ai/v1` (replace `<workspace>` with the id shown on the RouteLLM API page in that workspace). Same key header: `Authorization: Bearer <your_api_key>`.
+## Hosting elsewhere
 
-**OpenAI** ([Create chat completion](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create/)):
+Netlify is the documented default. This repo has no Vercel project file and no Cloudflare Wrangler config. Port the pieces below. Do not expect the Netlify handler to run unchanged.
 
-| Variable | Value |
-|----------|--------|
-| `OPENAI_API_KEY` | OpenAI API key |
-| `AI_BASE_URL` | `https://api.openai.com/v1` (optional; this is the default) |
-| `OPENAI_MODEL` or `AI_MODEL` | `gpt-4o-mini` if unset |
+### What is specific to Netlify
 
-The code default remains `gpt-4o-mini`, which that reference still accepts on `POST https://api.openai.com/v1/chat/completions`. The model page ([GPT-4o mini](https://developers.openai.com/api/docs/models/gpt-4o-mini)) currently marks `gpt-4o-mini` as deprecated while still listing Chat Completions as supported. Set `OPENAI_MODEL` or `AI_MODEL` to a current Chat Completions model id if you do not want the default.
+- **Function format.** `netlify/functions/api.mjs` exports `handler(req)` (web `Request` in, `Response` out) and `config.path = "/api/*"`. `netlify/functions/ai_provider.mjs` is imported by that handler. `netlify/functions/ai_limits.mjs` calls `getStore` from `@netlify/blobs` on the store `keyprose-ai-limits`.
+- **`netlify.toml`.** Publish directory, the 26 second function timeout, and the redirects in the table above. No headers block.
+- **`frontend/_redirects`.** The same redirects, in Netlify's published-folder redirects file.
+- **Environment variables.** The function reads `process.env`. Set them in the Netlify UI or CLI. The Python app reads the same AI names with `os.getenv`.
 
----
+Hosted-only behavior sits in those JavaScript files: body size cap, hourly and daily live caps, `host: "netlify"` on the health check, and the inline PDF.
 
-## 📖 API Documentation
+### Plain VPS, or any host that runs the Python app
 
-Interactive docs available at `http://localhost:8000/docs` (Swagger UI) and `http://localhost:8000/redoc`.
+This path is already in the repo. Use `python3 backend/server.py` or the `Dockerfile` (`backend/` and `frontend/` only). `backend/server.py` serves the pages, the extensionless tool URLs, `/privacy`, and `/terms`. `backend/demo_http.py` implements `/api/*`. You do not need `netlify.toml`, `api.mjs`, or Blobs.
 
-See [API_REFERENCE.md](API_REFERENCE.md) for full endpoint documentation with examples.
+You do need to supply TLS and the domain yourself (a reverse proxy is the usual way). Set `PORT`, `PDF_OUTPUT_DIR`, and the AI variables in the environment. There is no hourly or daily cap in Python. Request bodies must satisfy `backend/models/schemas.py`. CMA PDFs are files on disk, fetched from `/api/cma/pdf/{filename}`.
 
----
+### Vercel
 
-## 🤝 Support & Customization
+Publish `frontend/` as the static root. Copy the redirects into `vercel.json`. Vercel will not run `netlify/functions/api.mjs` as-is: the export and the request object differ, and `@netlify/blobs` is not available. Port `api.mjs` and `ai_provider.mjs` onto a Vercel function, and replace `ai_limits.mjs` with another counter or drop the caps. Set the same variable names in the Vercel project. The Python server is a separate process. Vercel static hosting does not start it.
 
-This is a complete, production-ready codebase. Common customizations:
+### Cloudflare Pages or Workers
 
-- **Add authentication**: Add FastAPI middleware or use a service like Clerk/Auth0
-- **Connect a database**: Replace the seed SQL with SQLAlchemy + PostgreSQL
-- **Custom AI prompts**: Edit the prompt templates in each `backend/ai/*.py` module
-- **White-label**: Update branding in `frontend/` HTML files and `frontend/assets/logo.svg`
-- **Add more tools**: Follow the pattern in any `backend/ai/` module
+Pages can publish `frontend/`. `frontend/_redirects` lists the same rewrites as `netlify.toml`, in the redirects file both Netlify and Pages understand. These rules are plain path rewrites. Confirm them on Pages before you rely on them. A Worker does not load the Netlify handler unchanged: the handler signature differs, `ai_provider.mjs` imports `node:crypto`, and `ai_limits.mjs` depends on Netlify Blobs. Port `api.mjs` and `ai_provider.mjs`, and replace the Blobs counter. Bind the environment variables the way that platform expects. To avoid a JavaScript port, run `backend/server.py` on a VPS and point the domain at it.
 
----
+## Release zip
 
-## 📄 License
+`bash scripts/build_release.sh` or `make release` writes `release/keyprose-release.zip` from tracked files and untracked files that are not gitignored. The script leaves out `.git`, `.env` files, databases, `node_modules`, caches, and anything already zipped under `release/`. The zip is gitignored. Commit the script, not the archive. The previous `release/listing-pilot.zip` was removed.
 
-MIT License — see [LICENSE.txt](../release/LICENSE.txt)
+## Known limits
+
+- No accounts, no billing, and no stored user listings. The seed database is optional local sample data.
+- The public function accepts partial JSON objects. `property_details` must be an object for the listing writer. CMA needs an `address` and a non-empty `comps` array, and each comp is not schema-checked. Social needs `property_id`. Email needs `recipient_type` and a `context` object. Outreach needs a non-empty `target_list`, and a contact does not need `name` or `email`. Missing numbers fall back to sample defaults (for example 3 bedrooms, 2 bathrooms, 1800 square feet). A body that is not valid JSON returns HTTP 400. The Python models reject missing required fields with HTTP 422. A comp there needs `address`, `price`, `sqft`, `beds`, `baths`, and `sold_date`. A contact needs `name` and `email`.
+- Sample copy adds generic lines. Medium and long listings append kitchen, bath, yard, garage, and school sentences the user did not enter. Social sample posts add Austin wording and Austin hashtags even when the address is somewhere else, and missing details become a stand-in price and highlight. Email sample templates fill blanks with a generic agent name, a 512 phone number, stand-in prices, a seller's-market line, and a fixed market snapshot, and some buyer and investor templates add interest, offer, and renovation lines. The CMA summary adds a fixed sentence about moderate demand and limited inventory. The numeric range is computed from the comps (low about 3% under the cheapest, high about 3% over the dearest).
+- Live listing prompts still substitute those bedroom, bath, and size defaults when the fields are empty, and they include a non-empty neighborhood. The privacy page currently says the neighborhood is not sent on the live listing request. That sentence does not match `listingPrompt` in `backend/ai/listing_writer.py` and `netlify/functions/ai_provider.mjs`. Update it when you edit the legal pages. Do not treat this note as a change to those pages.
+- `docs/API_REFERENCE.md` shows an `API_KEY` header the server does not check. `docs/DEMO_SCRIPT.md` is a spoken walkthrough and is not the spec.
