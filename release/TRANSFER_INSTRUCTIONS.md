@@ -1,6 +1,6 @@
 # Transfer Instructions
 
-This document outlines the steps to transfer the **KeyProse** codebase to the buyer. The GitHub repository is still named `listing-pilot`.
+This document outlines the steps to transfer the **KeyProse** codebase to the buyer. The GitHub repository is named `keyprose`.
 
 ---
 
@@ -19,7 +19,7 @@ This document outlines the steps to transfer the **KeyProse** codebase to the bu
 
 ### Step 1: GitHub Repository Transfer
 
-1. Seller goes to: `https://github.com/SELLER_USERNAME/listing-pilot/settings`
+1. Seller goes to: `https://github.com/SELLER_USERNAME/keyprose/settings`
 2. Scroll to **"Danger Zone"** → **"Transfer"**
 3. Enter buyer's GitHub username
 4. Confirm transfer
@@ -30,8 +30,8 @@ This document outlines the steps to transfer the **KeyProse** codebase to the bu
 
 Buyer confirms:
 ```bash
-git clone https://github.com/BUYER_USERNAME/listing-pilot.git
-cd listing-pilot
+git clone https://github.com/BUYER_USERNAME/keyprose.git
+cd keyprose
 python backend/server.py
 # Visit http://localhost:8000 — should work immediately
 ```

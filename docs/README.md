@@ -2,11 +2,11 @@
 
 > **KeyProse: the AI back office for listing agents.** 5 AI-powered tools for real estate professionals. Generate MLS listings, CMA reports, social posts, email campaigns, and outreach sequences — in seconds, not hours.
 
-The Git repository is still named `listing-pilot`. API routes and environment variables are unchanged.
+The Git repository is named `keyprose`. API routes and environment variables are unchanged.
 
 The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` serve the same site. Privacy Policy: [https://keyprose.com/privacy](https://keyprose.com/privacy). Terms of Use: [https://keyprose.com/terms](https://keyprose.com/terms). Those pages, the homepage, the tools, and the API docs set a canonical URL on `keyprose.com`. CORS in `backend/server.py` is still open (`allow_origins=["*"]`) for the self-hosted demo.
 
-[![CI](https://github.com/YOUR_USERNAME/listing-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/listing-pilot/actions)
+[![CI](https://github.com/YOUR_USERNAME/keyprose/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/keyprose/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../release/LICENSE.txt)
@@ -17,8 +17,8 @@ The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.c
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/listing-pilot.git
-cd listing-pilot
+git clone https://github.com/YOUR_USERNAME/keyprose.git
+cd keyprose
 
 # 2. Install dependencies
 pip install -r backend/requirements.txt
@@ -61,7 +61,7 @@ The server auto-detects the key and switches from demo mode to live generation. 
 ## 📁 Project Structure
 
 ```
-listing-pilot/
+keyprose/
 ├── backend/
 │   ├── server.py              # FastAPI app (start here)
 │   ├── requirements.txt
@@ -144,7 +144,7 @@ Stock outreach templates (`new_listing`, `price_drop`, `open_house`, `follow_up`
 ## 🧪 Running Tests
 
 ```bash
-cd listing-pilot
+cd keyprose
 pip install -r backend/requirements.txt
 pytest backend/tests/ -v
 ```

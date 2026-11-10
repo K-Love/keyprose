@@ -8,8 +8,8 @@ Welcome! This guide walks you through everything you need to launch **KeyProse**
 
 ```bash
 # Clone from GitHub (repo transferred to you)
-git clone https://github.com/YOUR_USERNAME/listing-pilot.git
-cd listing-pilot
+git clone https://github.com/YOUR_USERNAME/keyprose.git
+cd keyprose
 ```
 
 ---
@@ -87,8 +87,8 @@ fly deploy
 
 ```bash
 # On your server
-git clone https://github.com/YOUR_USERNAME/listing-pilot.git
-cd listing-pilot
+git clone https://github.com/YOUR_USERNAME/keyprose.git
+cd keyprose
 pip install -r backend/requirements.txt
 
 # Run with systemd or screen
@@ -194,7 +194,7 @@ PORT=8001 python backend/server.py
 
 **Module not found errors:**
 ```bash
-cd listing-pilot
+cd keyprose
 pip install -r backend/requirements.txt
 python backend/server.py  # Run from repo root
 ```
