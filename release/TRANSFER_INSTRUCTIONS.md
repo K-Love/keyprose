@@ -59,8 +59,6 @@ Do not send key values in email, in this repo, or inside `keyprose-release.zip`.
 
 Rewrite the operator name, the studio name, the contact path, and the GitHub link so they match the buyer. Read the provider and hosting sentences again after you choose a host and an AI vendor.
 
-One sentence is already behind the code. The privacy page says the neighborhood is not added to the live listing request. `listingPrompt` in `backend/ai/listing_writer.py` and `netlify/functions/ai_provider.mjs` includes a neighborhood when the field is non-empty. Fix that sentence in the same edit. This transfer does not change those pages by itself.
-
 The footers and the rest of the UI stay as they are until you choose to edit them.
 
 ## After transfer
