@@ -35,7 +35,7 @@ Every variable the code reads is listed in [README.md](README.md#environment-var
 
 This is the default host.
 
-1. Transfer the existing site, or create a new one and connect the repo. The existing site name is `listingp`. Leave that name as it is if you transfer the site.
+1. Transfer the existing site, or create a new one and connect the repo. The existing site name is `keyprose`. Its default URL is https://keyprose.netlify.app. A buyer may rename it. Only the .netlify.app address changes. Custom domains keep working.
 2. Publish directory: `frontend`, from `netlify.toml`. No build command. The root `package.json` supplies `@netlify/blobs` for the live-generation counters.
 3. Set the environment variables in the Netlify site settings for each deploy context you use.
 4. Add `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Point DNS using the records Netlify shows. Redirect `www.keyprose.com` to `https://keyprose.com`. `keyprose.app` and `www.keyprose.app` redirect to `https://keyprose.com` from the rules at the top of `frontend/_redirects`.

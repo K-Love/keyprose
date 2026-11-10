@@ -112,7 +112,7 @@ No provider key is required. CI is `.github/workflows/ci.yml`.
 
 Default host for the public site.
 
-1. Transfer the existing site, or create one. The current site name is `listingp`. Do not rename `listingp` as part of a transfer. The name is not stored in this repo.
+1. Transfer the existing site, or create one. The current site name is `keyprose`. The default URL is https://keyprose.netlify.app. keyprose.com is unchanged. A buyer may rename the site. Only the .netlify.app address changes, and custom domains keep working. The name is not stored in this repo.
 2. Connect the GitHub repo. Publish directory is `frontend` (`netlify.toml`). Leave the build command empty. Netlify still installs `package.json` so `@netlify/blobs` is available to the function.
 3. Set the variables in **Site configuration → Environment variables**. Include `OPENAI_API_KEY` only if you want live copy.
 4. Deploy. `npx netlify deploy --prod --build` from a logged-in CLI does the same against a linked site.

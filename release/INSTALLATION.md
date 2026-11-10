@@ -79,7 +79,7 @@ Add `-e` flags for `OPENAI_API_KEY`, `AI_BASE_URL`, `AI_MODEL`, `PORT`, or `PDF_
 
 Default production host. Config is `netlify.toml`: publish `frontend`, function timeout 26 seconds, redirects for `/docs`, `/tools/*`, `/privacy`, and `/terms`. Ahead of those, `frontend/_redirects` sends `keyprose.app` and `www.keyprose.app` to `https://keyprose.com`. Netlify reads that file first. `netlify.toml` repeats the same rules. There is no headers file.
 
-The live site's Netlify name is `listingp`. Keep that name if you transfer the site.
+The live site's Netlify name is `keyprose`. Its default URL is https://keyprose.netlify.app. A buyer may rename it. Only that address changes. Custom domains, including keyprose.com, keep working.
 
 1. Log in with `npx netlify login`, or sign in at the Netlify UI.
 2. Link or create the site (`npx netlify init` or `npx netlify link`). Connect the GitHub repository if you want Git deploys.

@@ -8,7 +8,7 @@ Source today: [https://github.com/K-Love/keyprose](https://github.com/K-Love/key
 
 - This Git repository: `frontend/`, `backend/`, `netlify/`, `docs/`, `demo_data/`, `scripts/`, `Dockerfile`, `netlify.toml`, and GitHub Actions in `.github/workflows/ci.yml`
 - The public domains `keyprose.com` and `keyprose.app`, registered at Porkbun
-- The Netlify site that serves them, named `listingp`
+- The Netlify site that serves them, named `keyprose`. Its default URL is https://keyprose.netlify.app. keyprose.com is unchanged.
 - Operator identity on the Privacy and Terms pages (Kevin Love, Backstage Interactive)
 
 A release zip is not part of the git history. Build one with `bash scripts/build_release.sh` or `make release`. Output: `release/keyprose-release.zip`. The script packs tracked files and untracked files that are not gitignored. It excludes `.git`, `.env` and other env files, `*.db` / `*.sqlite` / `*.sqlite3`, `node_modules`, `__pycache__`, `.pytest_cache`, `.netlify`, and any zip already in `release/`. The old committed `release/listing-pilot.zip` was a stale archive and has been removed. Docs do not require a binary zip in git, so the replacement is the script.
@@ -27,11 +27,11 @@ After the transfer, update the GitHub link in `frontend/privacy.html` (`https://
 
 ### Netlify
 
-The production site name is `listingp`. Do not rename it.
+The production site name is `keyprose`. The default URL is https://keyprose.netlify.app. A buyer may rename the site. Only that .netlify.app address changes. Custom domains keep working.
 
 **Transfer the site** to the buyer's Netlify team if both sides can do that in the Netlify UI. The site keeps its settings, environment variables, and domain attachments. Then rotate every secret (next section). The buyer confirms the publish directory is still `frontend` and that `netlify.toml` is the config the site uses.
 
-**Or create a new site** from the transferred repo. Set the publish directory to `frontend`, leave the build command empty, set environment variables, deploy, and attach the domains. The new site can have any name. `listingp` can be left in place until DNS has moved, then deleted so it does not keep serving the domains.
+**Or create a new site** from the transferred repo. Set the publish directory to `frontend`, leave the build command empty, set environment variables, deploy, and attach the domains. The new site can have any name. `keyprose` can be left in place until DNS has moved, then deleted so it does not keep serving the domains.
 
 `netlify/functions/api.mjs` is the hosted API. Losing the Netlify site does not lose the Python server in `backend/server.py`.
 
