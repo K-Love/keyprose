@@ -129,6 +129,35 @@ def _deterministic_listing(details: Dict[str, Any], tone: str, length: str) -> s
     return medium + long_extra
 
 
+def _neighborhood_text(value: Any) -> str:
+    if not isinstance(value, str):
+        return ""
+    return value.strip()
+
+
+def listing_prompt(details: Dict[str, Any], tone: str = "professional", length: str = "medium") -> str:
+    """Prompt sent to the model. Neighborhood is included only when the user provided one."""
+    target_words = _LENGTH_TARGETS.get(length, 200)
+    features_str = ", ".join(details.get("features", [])) or "modern finishes"
+    address = details.get("address", "a prime location")
+    neighborhood = _neighborhood_text(details.get("neighborhood"))
+    place = f"{address} in the {neighborhood} neighborhood" if neighborhood else address
+    year_clause = f", built in {details.get('year_built')}" if details.get("year_built") else ""
+
+    return (
+        f"Write a {tone} real estate listing description for a "
+        f"{details.get('beds', 3)}-bedroom, {details.get('baths', 2)}-bathroom home "
+        f"at {place}. "
+        f"The home is {details.get('sqft', 1800):,} sq ft"
+        f"{year_clause}. "
+        f"Key features: {features_str}. "
+        f"Price: ${details.get('price', 0):,}. "
+        f"Target approximately {target_words} words. "
+        "Do not include the price in the listing text. "
+        "Write in second person (you/your). End with a call to action."
+    )
+
+
 def generate_listing(details: Dict[str, Any], tone: str = "professional", length: str = "medium") -> str:
     """
     Generate a real estate listing description.
@@ -146,21 +175,7 @@ def generate_listing(details: Dict[str, Any], tone: str = "professional", length
     if not os.getenv("OPENAI_API_KEY"):
         return _deterministic_listing(details, tone, length)
 
-    target_words = _LENGTH_TARGETS.get(length, 200)
-    features_str = ", ".join(details.get("features", [])) or "modern finishes"
-
-    prompt = (
-        f"Write a {tone} real estate listing description for a "
-        f"{details.get('beds', 3)}-bedroom, {details.get('baths', 2)}-bathroom home "
-        f"at {details.get('address', 'a prime location')}. "
-        f"The home is {details.get('sqft', 1800):,} sq ft"
-        f"{', built in ' + str(details.get('year_built')) if details.get('year_built') else ''}. "
-        f"Key features: {features_str}. "
-        f"Price: ${details.get('price', 0):,}. "
-        f"Target approximately {target_words} words. "
-        "Do not include the price in the listing text. "
-        "Write in second person (you/your). End with a call to action."
-    )
+    prompt = listing_prompt(details, tone, length)
 
     system = (
         "You are an expert real estate copywriter who crafts compelling, "

@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 # Force demo mode
 os.environ.pop("OPENAI_API_KEY", None)
 
-from ai.listing_writer import generate_listing, _deterministic_listing
+from ai.listing_writer import generate_listing, listing_prompt, _deterministic_listing
 
 
 SAMPLE_PROPERTY = {
@@ -87,3 +87,44 @@ class TestGenerateListing:
         r1 = generate_listing(SAMPLE_PROPERTY, "professional", "medium")
         r2 = generate_listing(SAMPLE_PROPERTY, "professional", "medium")
         assert r1 == r2
+
+
+class TestListingPrompt:
+    def _without_neighborhood(self):
+        return {key: value for key, value in SAMPLE_PROPERTY.items() if key != "neighborhood"}
+
+    def test_includes_neighborhood_when_provided(self):
+        prompt = listing_prompt(SAMPLE_PROPERTY, "professional", "medium")
+        assert "at 123 Maple Street, Austin, TX 78701 in the South Congress neighborhood." in prompt
+        assert prompt.count("South Congress") == 1
+
+    def test_omits_neighborhood_when_missing_or_blank(self):
+        details = self._without_neighborhood()
+        absent = listing_prompt(details, "professional", "medium")
+        assert "neighborhood" not in absent.lower()
+        assert "South Congress" not in absent
+        for empty in ("", "   ", None):
+            assert listing_prompt({**details, "neighborhood": empty}, "professional", "medium") == absent
+
+    def test_trims_neighborhood_before_including_it(self):
+        details = {**self._without_neighborhood(), "neighborhood": "  Hyde Park  "}
+        prompt = listing_prompt(details, "luxury", "short")
+        assert "in the Hyde Park neighborhood" in prompt
+        assert "in the  Hyde Park" not in prompt
+
+    def test_live_call_sends_the_same_prompt(self, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+        seen = {}
+
+        def fake_generate(prompt, max_tokens=512, system_message=None, temperature=0.7):
+            seen["prompt"] = prompt
+            return "Generated listing."
+
+        monkeypatch.setattr("ai.listing_writer.generate_text", fake_generate)
+        result = generate_listing(SAMPLE_PROPERTY, "luxury", "short")
+        assert result == "Generated listing."
+        assert seen["prompt"] == listing_prompt(SAMPLE_PROPERTY, "luxury", "short")
+        assert "in the South Congress neighborhood" in seen["prompt"]
+
+        generate_listing({**self._without_neighborhood(), "neighborhood": " "}, "luxury", "short")
+        assert "neighborhood" not in seen["prompt"].lower()

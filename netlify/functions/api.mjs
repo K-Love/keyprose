@@ -262,7 +262,7 @@ function socialPosts(propertyId, tone, platform, details) {
 
 const EMAILS = {
   buyer: [
-    ["New listing: {address}", "Hi {first_name},\n\nI just listed {address}. {beds} bedrooms, {baths} bathrooms, {sqft} sq ft, listed at ${price:,}.\n\nHighlights: {highlight}.\n\nWould you like a private showing this weekend?\n\n{agent_name}\n{agent_phone}", 0],
+    ["New listing: {address}", "Hi {first_name},\n\nI just listed {address}.{specs} Listed at ${price:,}.\n\nHighlights: {highlight}.\n\nWould you like a private showing this weekend?\n\n{agent_name}\n{agent_phone}", 0],
     ["Following up on {address}", "Hi {first_name},\n\nChecking back on {address}. Happy to answer questions or set a time to walk through it.\n\n{agent_name}\n{agent_phone}", 3],
     ["Still available: {address}", "Hi {first_name},\n\n{address} is still available. If you want to see it, I can arrange a showing today.\n\n{agent_name}\n{agent_phone}", 7],
   ],
@@ -271,7 +271,7 @@ const EMAILS = {
     ["Your valuation is ready", "Hi {first_name},\n\nI have a preliminary look at {address}. Reply or call {agent_phone} and I will share the details.\n\n{agent_name}", 4],
   ],
   investor: [
-    ["Investment note: {address}", "Hi {first_name},\n\n{address} is listed at ${price:,}, about {beds} bed / {baths} bath, {sqft} sq ft, with an illustrative {cap_rate}% cap rate. Ask me for the rent roll before you rely on that figure.\n\n{agent_name}\n{agent_phone}", 0],
+    ["Investment note: {address}", "Hi {first_name},\n\n{address} is listed at ${price:,}.{specs} Illustrative cap rate: {cap_rate}%. Ask me for the rent roll before you rely on that figure.\n\n{agent_name}\n{agent_phone}", 0],
   ],
   past_client: [
     ["Checking in", "Hi {first_name},\n\nIt has been a while. If you want a current value for your home, I can run a quick comparison. Referrals are welcome too.\n\n{agent_name}\n{agent_phone}", 0],
@@ -281,15 +281,29 @@ const EMAILS = {
   ],
 };
 
+function provided(context, key) {
+  if (!context || !Object.prototype.hasOwnProperty.call(context, key)) return false;
+  const value = context[key];
+  if (value == null) return false;
+  if (typeof value === "string" && value.trim() === "") return false;
+  return true;
+}
+
+function specsSentence(context) {
+  const parts = [];
+  if (provided(context, "beds")) parts.push(`${context.beds} bedrooms`);
+  if (provided(context, "baths")) parts.push(`${context.baths} bathrooms`);
+  if (provided(context, "sqft")) parts.push(`${context.sqft} sq ft`);
+  return parts.length ? ` ${parts.join(", ")}.` : "";
+}
+
 function fill(template, context) {
+  const source = context || {};
   const data = {
     first_name: "there",
     agent_name: "Your Agent",
     agent_phone: "(512) 555-0100",
     address: "the property",
-    beds: 3,
-    baths: 2,
-    sqft: "1,800",
     price: 550000,
     highlight: "modern finishes and a great location",
     market_condition: "seller's market",
@@ -300,7 +314,8 @@ function fill(template, context) {
     median_price: 485000,
     avg_dom: 18,
     inventory_level: "low (2.1 months supply)",
-    ...context,
+    ...source,
+    specs: specsSentence(source),
   };
   return template.replace(/\{(\w+)(,)?\}/g, (_, key, comma) => {
     const value = data[key];
