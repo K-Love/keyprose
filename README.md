@@ -1,6 +1,6 @@
 # KeyProse
 
-KeyProse is a working software asset for listing agents: five tools that draft MLS descriptions, a comparable-sale summary, social posts, email sequences, and an outreach preview. The public site is [keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` serve the same site.
+KeyProse is a working software asset for listing agents: five tools that draft MLS descriptions, a comparable-sale summary, social posts, email sequences, and an outreach preview. The public site is [keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` redirect there too, and the path and query string stay on the URL.
 
 The buyer brings their own AI provider key and their own hosting. This repository has no accounts, no billing, and no customer database. It does not record traffic, revenue, or users.
 
@@ -94,13 +94,13 @@ Both suites run without a provider key. GitHub Actions (`.github/workflows/ci.ym
 
 ## Deploy on your own Netlify
 
-`netlify.toml` is the site config. Publish directory is `frontend`. There is no build command. Netlify installs the root `package.json` so the function can import `@netlify/blobs`. `[functions.api] timeout` is 26 seconds. Redirects map `/docs`, the five tool paths, `/privacy`, and `/terms` onto the HTML files. The same redirects are in `frontend/_redirects`. This repo has no `[[headers]]` block and no `_headers` file.
+`netlify.toml` is the site config. Publish directory is `frontend`. There is no build command. Netlify installs the root `package.json` so the function can import `@netlify/blobs`. `[functions.api] timeout` is 26 seconds. Redirects map `/docs`, the five tool paths, `/privacy`, and `/terms` onto the HTML files. Ahead of those, both files send `keyprose.app` and `www.keyprose.app` to `https://keyprose.com`. Netlify reads `frontend/_redirects` before `netlify.toml`. This repo has no `[[headers]]` block and no `_headers` file.
 
 The existing Netlify site is named `listingp`. Leave that name unchanged if you transfer the site. A new site can use any name. The name is not in this repository.
 
 1. Create or transfer a Netlify site and connect this repo, or deploy from a checkout with the Netlify CLI (`npx netlify login`, then `npx netlify init` or `npx netlify link`, then `npx netlify deploy --prod --build`).
 2. Set the environment variables above in the site settings. Put the provider key only there.
-3. Add the domains `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Point DNS at the records Netlify shows. Configure `www.keyprose.com` to redirect to `https://keyprose.com`, matching the privacy and terms pages. `keyprose.app` and `www.keyprose.app` should serve this same site. Netlify provisions HTTPS after DNS verifies.
+3. Add the domains `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Point DNS at the records Netlify shows. Configure `www.keyprose.com` to redirect to `https://keyprose.com`, matching the privacy and terms pages. `keyprose.app` and `www.keyprose.app` redirect to `https://keyprose.com` from the rules at the top of `frontend/_redirects`. Netlify provisions HTTPS after DNS verifies.
 
 Domain registration for `keyprose.com` and `keyprose.app` is at Porkbun. DNS can point those names at Netlify while the registrar stays Porkbun. Moving the registration, or hosting somewhere else, is covered in [docs/README.md](docs/README.md) and [release/TRANSFER_INSTRUCTIONS.md](release/TRANSFER_INSTRUCTIONS.md).
 

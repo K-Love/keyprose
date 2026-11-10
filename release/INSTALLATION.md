@@ -77,7 +77,7 @@ Add `-e` flags for `OPENAI_API_KEY`, `AI_BASE_URL`, `AI_MODEL`, `PORT`, or `PDF_
 
 ## Deploy on Netlify
 
-Default production host. Config is `netlify.toml`: publish `frontend`, function timeout 26 seconds, redirects for `/docs`, `/tools/*`, `/privacy`, and `/terms`. `frontend/_redirects` repeats the redirects. There is no headers file.
+Default production host. Config is `netlify.toml`: publish `frontend`, function timeout 26 seconds, redirects for `/docs`, `/tools/*`, `/privacy`, and `/terms`. Ahead of those, `frontend/_redirects` sends `keyprose.app` and `www.keyprose.app` to `https://keyprose.com`. Netlify reads that file first. `netlify.toml` repeats the same rules. There is no headers file.
 
 The live site's Netlify name is `listingp`. Keep that name if you transfer the site.
 
@@ -85,7 +85,7 @@ The live site's Netlify name is `listingp`. Keep that name if you transfer the s
 2. Link or create the site (`npx netlify init` or `npx netlify link`). Connect the GitHub repository if you want Git deploys.
 3. Set the variables under site environment settings. Save them for each deploy context you publish.
 4. `npx netlify deploy --prod --build`.
-5. Attach `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Enter the DNS records Netlify gives you at the DNS host. Redirect `www.keyprose.com` to `https://keyprose.com`. Point the `.app` hostnames at the same site.
+5. Attach `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Enter the DNS records Netlify gives you at the DNS host. Redirect `www.keyprose.com` to `https://keyprose.com`. `keyprose.app` and `www.keyprose.app` redirect to `https://keyprose.com` from the rules at the top of `frontend/_redirects`.
 
 Domains are registered at Porkbun. You can leave them there. See [TRANSFER_INSTRUCTIONS.md](TRANSFER_INSTRUCTIONS.md) to transfer a domain out, including the 60-day ICANN lock.
 
@@ -93,7 +93,7 @@ Domains are registered at Porkbun. You can leave them there. See [TRANSFER_INSTR
 
 Use the Python server when you are not on Netlify. `backend/server.py` already serves the static pages and `/api/*` by calling `backend/demo_http.py` and `backend/ai/`. Put it behind your own TLS proxy and set the environment variables in the process. The Dockerfile is this same server. `netlify.toml` and `netlify/functions/` are unused on this path. Python has no Blobs rate limit, and it validates JSON with `backend/models/schemas.py`.
 
-To stay on a static host such as Vercel or Cloudflare Pages, publish `frontend/` and port `netlify/functions/api.mjs` plus `netlify/functions/ai_provider.mjs`. Replace `netlify/functions/ai_limits.mjs`, which imports `@netlify/blobs`. Recreate the redirects from `netlify.toml` or `frontend/_redirects` in that host's config. `frontend/_redirects` is the same rewrite list Pages can publish. Confirm those rules on Pages before you rely on them. This repository does not ship those adapters. The file-by-file notes are in [../docs/README.md](../docs/README.md#hosting-elsewhere).
+To stay on a static host such as Vercel or Cloudflare Pages, publish `frontend/` and port `netlify/functions/api.mjs` plus `netlify/functions/ai_provider.mjs`. Replace `netlify/functions/ai_limits.mjs`, which imports `@netlify/blobs`. Recreate the redirects from `netlify.toml` or `frontend/_redirects` in that host's config. `frontend/_redirects` is the same rule list Pages can publish. The first four rules are the `.app` host redirects. Confirm those rules on Pages before you rely on them. This repository does not ship those adapters. The file-by-file notes are in [../docs/README.md](../docs/README.md#hosting-elsewhere).
 
 ## Troubleshooting
 

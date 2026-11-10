@@ -1,3 +1,11 @@
+# Netlify reads this file before netlify.toml. These four stay first so the
+# path rewrites below cannot shadow them. 301! is permanent and forced.
+# The target sets no query string, so the request's query string is kept.
+http://keyprose.app/* https://keyprose.com/:splat 301!
+https://keyprose.app/* https://keyprose.com/:splat 301!
+http://www.keyprose.app/* https://keyprose.com/:splat 301!
+https://www.keyprose.app/* https://keyprose.com/:splat 301!
+
 /docs  /api-docs.html  200
 /tools/listing  /tools/listing.html  200
 /tools/cma  /tools/cma.html  200

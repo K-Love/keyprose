@@ -38,7 +38,7 @@ This is the default host.
 1. Transfer the existing site, or create a new one and connect the repo. The existing site name is `listingp`. Leave that name as it is if you transfer the site.
 2. Publish directory: `frontend`, from `netlify.toml`. No build command. The root `package.json` supplies `@netlify/blobs` for the live-generation counters.
 3. Set the environment variables in the Netlify site settings for each deploy context you use.
-4. Add `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Point DNS using the records Netlify shows. Redirect `www.keyprose.com` to `https://keyprose.com`. Serve the same site on the `.app` names.
+4. Add `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Point DNS using the records Netlify shows. Redirect `www.keyprose.com` to `https://keyprose.com`. `keyprose.app` and `www.keyprose.app` redirect to `https://keyprose.com` from the rules at the top of `frontend/_redirects`.
 
 `npx netlify login` and `npx netlify deploy --prod --build` deploy a linked site from a checkout.
 

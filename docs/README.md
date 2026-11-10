@@ -2,7 +2,7 @@
 
 KeyProse drafts listing copy, a comparable-sale summary, social posts, email sequences, and an outreach preview. It is a working software asset. The buyer supplies the AI key and the hosting. The repo does not include accounts, billing, a customer database, traffic, revenue, or a user list.
 
-The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` serve the same site. Privacy: [https://keyprose.com/privacy](https://keyprose.com/privacy). Terms: [https://keyprose.com/terms](https://keyprose.com/terms).
+The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` redirect to `https://keyprose.com`, and the path and query string stay on the URL. Privacy: [https://keyprose.com/privacy](https://keyprose.com/privacy). Terms: [https://keyprose.com/terms](https://keyprose.com/terms).
 
 Source today: [https://github.com/K-Love/keyprose](https://github.com/K-Love/keyprose).
 
@@ -116,11 +116,11 @@ Default host for the public site.
 2. Connect the GitHub repo. Publish directory is `frontend` (`netlify.toml`). Leave the build command empty. Netlify still installs `package.json` so `@netlify/blobs` is available to the function.
 3. Set the variables in **Site configuration → Environment variables**. Include `OPENAI_API_KEY` only if you want live copy.
 4. Deploy. `npx netlify deploy --prod --build` from a logged-in CLI does the same against a linked site.
-5. Domains. Add `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Use the DNS targets Netlify displays. Redirect `www.keyprose.com` to `https://keyprose.com`. Serve the same site on `keyprose.app` and `www.keyprose.app`. HTTPS follows once DNS verifies.
+5. Domains. Add `keyprose.com`, `www.keyprose.com`, `keyprose.app`, and `www.keyprose.app`. Use the DNS targets Netlify displays. Redirect `www.keyprose.com` to `https://keyprose.com`. `keyprose.app` and `www.keyprose.app` redirect to `https://keyprose.com` from the rules at the top of `frontend/_redirects`. HTTPS follows once DNS verifies.
 
 `[functions.api] timeout` is 26 seconds, which is the synchronous function maximum this file is written for. The Python client uses a 30 second HTTP timeout and is not part of the Netlify deploy.
 
-Redirects in `netlify.toml` and `frontend/_redirects`:
+`frontend/_redirects` is read before `netlify.toml`. The first four rules in that file, repeated at the top of `netlify.toml`, are forced 301s. `http://keyprose.app/*`, `https://keyprose.app/*`, `http://www.keyprose.app/*`, and `https://www.keyprose.app/*` each go to `https://keyprose.com/:splat`. The path is the splat. The query string is kept because the target does not set one. The path rewrites after those rules:
 
 | From | To |
 |------|----|
@@ -166,7 +166,7 @@ Publish `frontend/` as the static root. Copy the redirects into `vercel.json`. V
 
 ### Cloudflare Pages or Workers
 
-Pages can publish `frontend/`. `frontend/_redirects` lists the same rewrites as `netlify.toml`, in the redirects file both Netlify and Pages understand. These rules are plain path rewrites. Confirm them on Pages before you rely on them. A Worker does not load the Netlify handler unchanged: the handler signature differs, `ai_provider.mjs` imports `node:crypto`, and `ai_limits.mjs` depends on Netlify Blobs. Port `api.mjs` and `ai_provider.mjs`, and replace the Blobs counter. Bind the environment variables the way that platform expects. To avoid a JavaScript port, run `backend/server.py` on a VPS and point the domain at it.
+Pages can publish `frontend/`. `frontend/_redirects` lists the same rules as `netlify.toml`. The first four are host redirects to `https://keyprose.com`. The rest are path rewrites. Confirm them on Pages before you rely on them. A Worker does not load the Netlify handler unchanged: the handler signature differs, `ai_provider.mjs` imports `node:crypto`, and `ai_limits.mjs` depends on Netlify Blobs. Port `api.mjs` and `ai_provider.mjs`, and replace the Blobs counter. Bind the environment variables the way that platform expects. To avoid a JavaScript port, run `backend/server.py` on a VPS and point the domain at it.
 
 ## Release zip
 
