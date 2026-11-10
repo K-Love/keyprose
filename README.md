@@ -96,7 +96,7 @@ Both suites run without a provider key. GitHub Actions (`.github/workflows/ci.ym
 
 `netlify.toml` is the site config. Publish directory is `frontend`. There is no build command. Netlify installs the root `package.json` so the function can import `@netlify/blobs`. `[functions.api] timeout` is 26 seconds. Redirects map `/docs`, the five tool paths, `/privacy`, and `/terms` onto the HTML files. Ahead of those, both files send `keyprose.app` and `www.keyprose.app` to `https://keyprose.com`. Netlify reads `frontend/_redirects` before `netlify.toml`. This repo has no `[[headers]]` block and no `_headers` file.
 
-The existing Netlify site is named `listingp`. Leave that name unchanged if you transfer the site. A new site can use any name. The name is not in this repository.
+The existing Netlify site is named `keyprose`. Its default URL is https://keyprose.netlify.app. keyprose.com is unchanged. A buyer may rename the site. Only the .netlify.app address changes, and custom domains keep working. A new site can use any name. The name is not in this repository.
 
 1. Create or transfer a Netlify site and connect this repo, or deploy from a checkout with the Netlify CLI (`npx netlify login`, then `npx netlify init` or `npx netlify link`, then `npx netlify deploy --prod --build`).
 2. Set the environment variables above in the site settings. Put the provider key only there.
