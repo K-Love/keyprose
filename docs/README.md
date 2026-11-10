@@ -2,7 +2,7 @@
 
 > **KeyProse: the AI back office for listing agents.** 5 AI-powered tools for real estate professionals. Generate MLS listings, CMA reports, social posts, email campaigns, and outreach sequences — in seconds, not hours.
 
-The Git repository is still named `keyprose`. API routes and environment variables are unchanged.
+The Git repository is named `keyprose`. API routes and environment variables are unchanged.
 
 The public site is [https://keyprose.com](https://keyprose.com). `www.keyprose.com` redirects there. `keyprose.app` and `www.keyprose.app` serve the same site. Privacy Policy: [https://keyprose.com/privacy](https://keyprose.com/privacy). Terms of Use: [https://keyprose.com/terms](https://keyprose.com/terms). Those pages, the homepage, the tools, and the API docs set a canonical URL on `keyprose.com`. CORS in `backend/server.py` is still open (`allow_origins=["*"]`) for the self-hosted demo.
 

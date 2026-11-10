@@ -1,6 +1,6 @@
 # Transfer Instructions
 
-This document outlines the steps to transfer the **KeyProse** codebase to the buyer. The GitHub repository is still named `keyprose`.
+This document outlines the steps to transfer the **KeyProse** codebase to the buyer. The GitHub repository is named `keyprose`.
 
 ---
 
